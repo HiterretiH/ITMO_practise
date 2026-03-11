@@ -1,0 +1,11 @@
+.results {
+  margin-top: 1.5rem;
+  padding: 1.5rem;
+  border-radius: 0.75rem;
+  background-color: #f1f5f9;
+}
+
+.results h2 {
+  margin-top: 0;
+}
+

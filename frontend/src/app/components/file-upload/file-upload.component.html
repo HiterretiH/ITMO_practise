@@ -1,0 +1,18 @@
+<div class="file-upload">
+  <h2>Загрузка файла .docx</h2>
+
+  <p-fileUpload
+    name="vkrFile"
+    mode="advanced"
+    chooseLabel="Выбрать файл"
+    [showUploadButton]="false"
+    [showCancelButton]="false"
+    [multiple]="false"
+    accept=".docx"
+  >
+    <ng-template pTemplate="content">
+      <p>Перетащите файл сюда или нажмите кнопку «Выбрать файл».</p>
+    </ng-template>
+  </p-fileUpload>
+</div>
+
