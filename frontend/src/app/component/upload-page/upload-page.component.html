@@ -1,3 +1,41 @@
 <app-header></app-header>
+<p-toast />
 
-<!-- Загрузка файла для проверки — реализация позже -->
+<div class="page">
+  <div class="page-inner">
+    <h1 class="page-title">Проверка документа ВКР</h1>
+    <p class="page-lead">
+      Загрузите файл в формате .docx. Сервис проверит структуру и оформление по требованиям ИТМО и покажет
+      подробный отчёт.
+    </p>
+
+    <p-card header="Загрузка файла">
+      @if (loading) {
+        <div class="loading-block">
+          <p-progressSpinner strokeWidth="4" ariaLabel="Проверка" />
+          <span>Выполняется проверка документа…</span>
+        </div>
+      }
+
+      <p-fileUpload
+        name="file"
+        [customUpload]="true"
+        (uploadHandler)="onUpload($event)"
+        [multiple]="false"
+        accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        [maxFileSize]="20000000"
+        [disabled]="loading"
+        [chooseLabel]="'Выбрать файл'"
+        [uploadLabel]="'Проверить'"
+        [cancelLabel]="'Отмена'"
+        [showUploadButton]="true"
+        [showCancelButton]="true"
+        chooseIcon="pi pi-file-word"
+        uploadIcon="pi pi-check"
+        cancelIcon="pi pi-times"
+      />
+
+      <p class="hint">Поддерживается только .docx. Максимальный размер — 20 МБ.</p>
+    </p-card>
+  </div>
+</div>
