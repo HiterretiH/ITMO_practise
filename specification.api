@@ -1,0 +1,213 @@
+openapi: 3.0.0
+info:
+  title: API проверки ВКР
+  description: Сервис автоматической проверки структуры и форматирования документов .docx на соответствие требованиям ИТМО.
+  version: 1.0.0
+servers:
+  - url: https://api.vkr-check.itmo.ru/v1
+    description: Production server
+
+paths:
+  /validate:
+    post:
+      summary: Загрузить файл и получить результат проверки
+      description: Принимает файл .docx, выполняет его анализ и сразу возвращает детальный JSON-отчет с ошибками.
+      operationId: validateDocument
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: Файл документа в формате .docx.
+              required:
+                - file
+      responses:
+        '200':
+          description: Успешная проверка. Возвращает результат анализа.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationResult'
+        '400':
+          description: Ошибка валидации (неверный формат файла, поврежденный документ).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: "INVALID_FILE_FORMAT"
+                message: "Поддерживаются только файлы .docx. Загруженный файл имеет расширение .pdf."
+        '422':
+          description: Файл прочитан, но найдены критические ошибки структуры (например, отсутствует обязательный раздел). Статус 'failed'.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationResult'
+        '500':
+          description: Внутренняя ошибка сервера.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /report:
+    post:
+      summary: Сгенерировать PDF-отчет по результатам проверки
+      description: Принимает ранее полученный результат проверки (JSON) и возвращает готовый PDF-файл. Файл не сохраняется на сервере, отдается сразу.
+      operationId: generateReport
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - validation_data
+              properties:
+                validation_data:
+                  $ref: '#/components/schemas/ValidationResult'
+                options:
+                  type: object
+                  properties:
+                    include_recommendations:
+                      type: boolean
+                      default: true
+                      description: Включить в отчет подробные рекомендации по исправлению ошибок.
+      responses:
+        '200':
+          description: PDF-отчет успешно сгенерирован.
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+                description: Файл отчета в формате PDF.
+        '400':
+          description: Некорректные входные данные для генерации отчета.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Ошибка при формировании PDF.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    ValidationResult:
+      type: object
+      required:
+        - document_info
+        - summary
+        - errors
+      properties:
+        document_info:
+          type: object
+          properties:
+            filename:
+              type: string
+              example: "diploma_example.docx"
+            pages:
+              type: integer
+              example: 45
+            paragraphs_checked:
+              type: integer
+              example: 320
+        summary:
+          type: object
+          properties:
+            total_errors:
+              type: integer
+              example: 12
+            critical_errors:
+              type: integer
+              example: 3
+            status:
+              type: string
+              enum: [passed, warning, failed]
+              description: "passed - нет критических ошибок, warning - есть замечания, failed - есть критические ошибки."
+              example: "failed"
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/ErrorItem'
+    
+    ErrorItem:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Уникальный идентификатор ошибки.
+        type:
+          type: string
+          enum:
+            - MISSING_SECTION
+            - FONT_MISMATCH
+            - MARGIN_MISMATCH
+            - LINE_SPACING_ERROR
+            - INDENT_ERROR
+            - HEADER_STYLE_ERROR
+            - PAGE_NUMBER_MISSING
+            - TABLE_CAPTION_ERROR
+            - FIGURE_CAPTION_ERROR
+            - CONTENT_TITLE_MISMATCH
+            - INVALID_LIST_FORMAT
+            - FORMULA_ERROR
+            - CITATION_ERROR
+          example: "FONT_MISMATCH"
+        severity:
+          type: string
+          enum: [critical, warning]
+          description: "critical - требует обязательного исправления, warning - рекомендация."
+        location:
+          type: object
+          properties:
+            page:
+              type: integer
+              nullable: true
+              description: Номер страницы, где обнаружена ошибка.
+            paragraph:
+              type: integer
+              nullable: true
+              description: Номер абзаца в документе.
+            element:
+              type: string
+              nullable: true
+              description: Конкретный элемент (например, 'СОДЕРЖАНИЕ', 'Таблица 2.1').
+        description:
+          type: string
+          description: Описание проблемы.
+          example: "Основной шрифт документа должен быть Times New Roman."
+        expected:
+          type: string
+          description: Ожидаемое значение согласно требованиям.
+          example: "Times New Roman, 14 pt, черный"
+        actual:
+          type: string
+          description: Фактическое значение, найденное в документе.
+          example: "Arial, 12 pt"
+        recommendation:
+          type: string
+          description: Краткая рекомендация по исправлению.
+          example: "Выделите весь текст (Ctrl+A) и установите шрифт Times New Roman, размер 14."
+
+    ErrorResponse:
+      type: object
+      properties:
+        code:
+          type: string
+          description: Код ошибки.
+          example: "FILE_PROCESSING_ERROR"
+        message:
+          type: string
+          description: Человекочитаемое описание ошибки.
+          example: "Не удалось распарсить файл. Файл может быть поврежден."
