@@ -1,0 +1,294 @@
+> Task :runDocxDebug
+23:45:58.459 [main] INFO com.example.backend.DocxLoadDebugMain -- Debug log (UTF-8): C:\Users\Enzolio\Desktop\itmopractice\ITMO_practise\backend\output\wrong.txt
+23:45:58.463 [main] INFO com.example.backend.DocxLoadDebugMain -- File: C:\Users\Enzolio\Desktop\itmopractice\ITMO_practise\backend\test-input\test2.docx
+23:45:58.463 [main] INFO com.example.backend.DocxLoadDebugMain -- Format: docx
+23:45:58.463 [main] INFO com.example.backend.DocxLoadDebugMain -- Full text length: 3058
+23:45:58.463 [main] INFO com.example.backend.DocxLoadDebugMain -- Detected contentType: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+23:45:58.463 [main] INFO com.example.backend.DocxLoadDebugMain -- Full text preview:
+СОДЕРЖАНИЕ
+СПИСОК СОКРАЩЕНИЙ И УСЛОВНЫХ ОБОЗНАЧЕНИЙ        8
+ТЕРМИНЫ И ОПРЕДЕЛЕНИЯ   9
+ ВВЕДЕНИЕ       9
+1. ОБОСНОВАНИЕ И ТРЕБОВАНИЯ     10
+1.1 Контекст и актуальность области     10
+1.6 Выводы      10
+1.7 Маленький пенис     10
+2. ПРОЕКТНЫЙ РАЗДЕЛ     11
+2.1 Определение темы и подходов 11
+2.6 Выводы      11
+ 3. РАЗРАБОТКА  11
+3.1 Определение темы и подходов 11
+3.2 Яйца        11
+3.52 Шлюшка     11
+3.53 Гавноооооооо       11
+2.52 Че за хуйня        11
+4. АНАЛИЗ РЕЗУЛЬТАТОВ   12
+4.1 Процесс и результаты тестирования   12
+        12
+ЗАКЛЮЧЕНИЕ      13
+СПИСОК ИСПОЛЬЗОВАННЫХ ИСТОЧНИКОВ        13
+ПРИЛОЖЕНИЕ А    14
+ПРИЛОЖЕНИЕ Б    15
+ПРИЛОЖЕНИЕ В    16
+СПИСОК СОКРАЩЕНИЙ И УСЛОВНЫХ ОБОЗНАЧЕНИЙ
+БД – База Данных
+UI – User Interface
+UX – User Experience
+API – Application Programming Interface
+ТЕРМИНЫ И ОПРЕДЕЛЕНИЯ
+Application Programming Interface – это набор публичных методов и соглашений компонента, через которые другие части системы могут безопасно взаимодействовать с ним, не зная внутренней реализации. [Ошибка: источник перекрёстной ссылки не найден].
+
+
+ВВЕДЕНИЕ
+Учитывая ключевые сценарии поведения, перспективное планирование говорит о возможностях как самодостаточных, так и внешне зависимых концептуальных решений. И нет сомнений, что диаграммы связей своевременно верифицированы. В
+... [truncated]
+23:45:58.465 [main] INFO com.example.backend.DocxLoadDebugMain -- Margins: leftCm=3.0, rightCm=1.4991181657848323, topCm=2.0, bottomCm=2.0
+23:45:58.465 [main] INFO com.example.backend.DocxLoadDebugMain -- Page sections (sectPr): 9
+23:45:58.465 [main] INFO com.example.backend.DocxLoadDebugMain --   Section[0]: margins=PageMargins(leftCm=3.0, rightCm=1.4991181657848323, topCm=2.0, bottomCm=2.0), pageWxH_twips=11906x16838, landscape=null, pgStart=null, pgFmt=decimal, restartPgNum=false
+23:45:58.470 [main] INFO com.example.backend.DocxLoadDebugMain --   Section[1]: margins=PageMargins(leftCm=3.0, rightCm=1.4991181657848323, topCm=2.0, bottomCm=2.0), pageWxH_twips=11906x16838, landscape=null, pgStart=null, pgFmt=decimal, restartPgNum=false
+23:45:58.470 [main] INFO com.example.backend.DocxLoadDebugMain --   Section[2]: margins=PageMargins(leftCm=3.0, rightCm=1.4991181657848323, topCm=2.0, bottomCm=2.0), pageWxH_twips=11906x16838, landscape=null, pgStart=null, pgFmt=decimal, restartPgNum=false
+23:45:58.470 [main] INFO com.example.backend.DocxLoadDebugMain --   Section[3]: margins=PageMargins(leftCm=3.0, rightCm=1.4991181657848323, topCm=2.0, bottomCm=2.0), pageWxH_twips=11906x16838, landscape=null, pgStart=null, pgFmt=decimal, restartPgNum=false
+23:45:58.470 [main] INFO com.example.backend.DocxLoadDebugMain --   Section[4]: margins=PageMargins(leftCm=3.0, rightCm=1.4991181657848323, topCm=2.0, bottomCm=2.0), pageWxH_twips=11906x16838, landscape=null, pgStart=null, pgFmt=decimal, restartPgNum=false
+23:45:58.471 [main] INFO com.example.backend.DocxLoadDebugMain --   Section[5]: margins=PageMargins(leftCm=3.0, rightCm=1.4991181657848323, topCm=2.0, bottomCm=2.0), pageWxH_twips=11906x16838, landscape=null, pgStart=null, pgFmt=decimal, restartPgNum=false
+23:45:58.471 [main] INFO com.example.backend.DocxLoadDebugMain --   Section[6]: margins=PageMargins(leftCm=3.0, rightCm=1.4991181657848323, topCm=2.0, bottomCm=2.0), pageWxH_twips=11906x16838, landscape=null, pgStart=null, pgFmt=decimal, restartPgNum=false
+23:45:58.471 [main] INFO com.example.backend.DocxLoadDebugMain --   Section[7]: margins=PageMargins(leftCm=3.0, rightCm=1.4991181657848323, topCm=2.0, bottomCm=2.0), pageWxH_twips=11906x16838, landscape=null, pgStart=null, pgFmt=decimal, restartPgNum=false
+23:45:58.471 [main] INFO com.example.backend.DocxLoadDebugMain --   Section[8]: margins=PageMargins(leftCm=3.0, rightCm=1.4991181657848323, topCm=2.0, bottomCm=2.0), pageWxH_twips=11906x16838, landscape=null, pgStart=null, pgFmt=decimal, restartPgNum=false
+23:45:58.471 [main] INFO com.example.backend.DocxLoadDebugMain -- Page numbering: footerPAGE=true, headerPAGE=false, footers=30, headers=0, footerCentered=true, restartInSections=false
+23:45:58.471 [main] INFO com.example.backend.DocxLoadDebugMain -- Style definitions (styles.xml), full list: 68
+23:45:58.471 [main] INFO com.example.backend.DocxLoadDebugMain --   Style[0]: id='Normal', name='Normal', type=paragraph, basedOn='null', outlineLvl=null
+23:45:58.471 [main] INFO com.example.backend.DocxLoadDebugMain --   Style[1]: id='Heading1', name='Heading 1', type=paragraph, basedOn='Normal', outlineLvl=0
+23:45:58.471 [main] INFO com.example.backend.DocxLoadDebugMain --   Style[2]: id='Heading2', name='Heading 2', type=paragraph, basedOn='Normal', outlineLvl=1
+23:45:58.471 [main] INFO com.example.backend.DocxLoadDebugMain --   Style[3]: id='Heading3', name='Heading 3', type=paragraph, basedOn='Normal', outlineLvl=2
+23:45:58.471 [main] INFO com.example.backend.DocxLoadDebugMain --   Style[4]: id='Heading4', name='Heading 4', type=paragraph, basedOn='Normal', outlineLvl=3
+23:45:58.471 [main] INFO com.example.backend.DocxLoadDebugMain --   Style[5]: id='DefaultParagraphFont', name='Default Paragraph Font', type=character, basedOn='null', outlineLvl=null
+23:45:58.471 [main] INFO com.example.backend.DocxLoadDebugMain --   Style[6]: id='1', name='Заголовок 1 Знак', type=character, basedOn='DefaultParagraphFont', outlineLvl=null
+23:45:58.471 [main] INFO com.example.backend.DocxLoadDebugMain --   Style[7]: id='2', name='Заголовок 2 Знак', type=character, basedOn='DefaultParagraphFont', outlineLvl=null
+23:45:58.471 [main] INFO com.example.backend.DocxLoadDebugMain --   Style[8]: id='3', name='Заголовок 3 Знак', type=character, basedOn='DefaultParagraphFont', outlineLvl=null
+23:45:58.471 [main] INFO com.example.backend.DocxLoadDebugMain --   Style[9]: id='4', name='Заголовок 4 Знак', type=character, basedOn='DefaultParagraphFont', outlineLvl=null
+23:45:58.471 [main] INFO com.example.backend.DocxLoadDebugMain --   Style[10]: id='Style10', name='Заголовок Знак', type=character, basedOn='DefaultParagraphFont', outlineLvl=null
+23:45:58.471 [main] INFO com.example.backend.DocxLoadDebugMain --   Style[11]: id='Style11', name='Заголовок Диплом Знак', type=character, basedOn='Style10', outlineLvl=null
+23:45:58.471 [main] INFO com.example.backend.DocxLoadDebugMain --   Style[12]: id='InternetLink', name='Internet Link', type=character, basedOn='DefaultParagraphFont', outlineLvl=null
+23:45:58.471 [main] INFO com.example.backend.DocxLoadDebugMain --   Style[13]: id='Style12', name='Верхний колонтитул Знак', type=character, basedOn='DefaultParagraphFont', outlineLvl=null
+23:45:58.471 [main] INFO com.example.backend.DocxLoadDebugMain --   Style[14]: id='-', name='Обычный текст - Диплом Знак', type=character, basedOn='DefaultParagraphFont', outlineLvl=null
+23:45:58.472 [main] INFO com.example.backend.DocxLoadDebugMain --   Style[15]: id='Style13', name='Нижний колонтитул Знак', type=character, basedOn='DefaultParagraphFont', outlineLvl=null
+23:45:58.472 [main] INFO com.example.backend.DocxLoadDebugMain --   Style[16]: id='2-', name='Заголовок 2 - Диплом Знак', type=character, basedOn='Style11', outlineLvl=null
+23:45:58.472 [main] INFO com.example.backend.DocxLoadDebugMain --   Style[17]: id='Style14', name='Текст сноски Знак', type=character, basedOn='DefaultParagraphFont', outlineLvl=null
+23:45:58.472 [main] INFO com.example.backend.DocxLoadDebugMain --   Style[18]: id='FootnoteCharacters', name='Footnote Characters', type=character, basedOn='null', outlineLvl=null
+23:45:58.472 [main] INFO com.example.backend.DocxLoadDebugMain --   Style[19]: id='FootnoteCharacters1', name='Footnote Characters1', type=character, basedOn='null', outlineLvl=null
+23:45:58.472 [main] INFO com.example.backend.DocxLoadDebugMain --   Style[20]: id='FootnoteReference', name='Footnote Reference', type=character, basedOn='null', outlineLvl=null
+23:45:58.472 [main] INFO com.example.backend.DocxLoadDebugMain --   Style[21]: id='FootnoteCharacters2', name='Footnote Characters2', type=character, basedOn='null', outlineLvl=null
+23:45:58.472 [main] INFO com.example.backend.DocxLoadDebugMain --   Style[22]: id='FootnoteCharacters21', name='Footnote Characters21', type=character, basedOn='null', outlineLvl=null
+23:45:58.472 [main] INFO com.example.backend.DocxLoadDebugMain --   Style[23]: id='annotationreference', name='annotation reference', type=character, basedOn='DefaultParagraphFont', outlineLvl=null
+23:45:58.472 [main] INFO com.example.backend.DocxLoadDebugMain --   Style[24]: id='Style15', name='Текст примечания Знак', type=character, basedOn='DefaultParagraphFont', outlineLvl=null
+23:45:58.472 [main] INFO com.example.backend.DocxLoadDebugMain --   Style[25]: id='Style16', name='Тема примечания Знак', type=character, basedOn='Style15', outlineLvl=null
+23:45:58.472 [main] INFO com.example.backend.DocxLoadDebugMain --   Style[26]: id='FollowedHyperlink', name='FollowedHyperlink', type=character, basedOn='DefaultParagraphFont', outlineLvl=null
+23:45:58.472 [main] INFO com.example.backend.DocxLoadDebugMain --   Style[27]: id='-1', name='Подпункт - Диплом Знак', type=character, basedOn='DefaultParagraphFont', outlineLvl=null
+23:45:58.472 [main] INFO com.example.backend.DocxLoadDebugMain --   Style[28]: id='UnresolvedMention', name='Unresolved Mention', type=character, basedOn='DefaultParagraphFont', outlineLvl=null
+23:45:58.472 [main] INFO com.example.backend.DocxLoadDebugMain --   Style[29]: id='Style17', name='Рисунки ДИПЛОМ Знак', type=character, basedOn='DefaultParagraphFont', outlineLvl=null
+23:45:58.472 [main] INFO com.example.backend.DocxLoadDebugMain --   Style[30]: id='Style18', name='Табилцы ДИПЛОМ Знак', type=character, basedOn='-', outlineLvl=null
+23:45:58.472 [main] INFO com.example.backend.DocxLoadDebugMain --   Style[31]: id='-2', name='Код - ДИПЛОМ Знак', type=character, basedOn='-', outlineLvl=null
+23:45:58.472 [main] INFO com.example.backend.DocxLoadDebugMain --   Style[32]: id='PlaceholderText', name='Placeholder Text', type=character, basedOn='DefaultParagraphFont', outlineLvl=null
+23:45:58.472 [main] INFO com.example.backend.DocxLoadDebugMain --   Style[33]: id='Style19', name='Ссылка указателя', type=character, basedOn='null', outlineLvl=null
+23:45:58.472 [main] INFO com.example.backend.DocxLoadDebugMain --   Style[34]: id='InternetLink1', name='Internet Link1', type=character, basedOn='null', outlineLvl=null
+23:45:58.472 [main] INFO com.example.backend.DocxLoadDebugMain --   Style[35]: id='InternetLink2', name='Internet Link2', type=character, basedOn='null', outlineLvl=null
+23:45:58.472 [main] INFO com.example.backend.DocxLoadDebugMain --   Style[36]: id='Hyperlink', name='Hyperlink', type=character, basedOn='null', outlineLvl=null
+23:45:58.472 [main] INFO com.example.backend.DocxLoadDebugMain --   Style[37]: id='Style20', name='Заголовок', type=paragraph, basedOn='Normal', outlineLvl=null
+23:45:58.472 [main] INFO com.example.backend.DocxLoadDebugMain --   Style[38]: id='BodyText', name='Body Text', type=paragraph, basedOn='Normal', outlineLvl=null
+23:45:58.472 [main] INFO com.example.backend.DocxLoadDebugMain --   Style[39]: id='List', name='List', type=paragraph, basedOn='BodyText', outlineLvl=null
+23:45:58.472 [main] INFO com.example.backend.DocxLoadDebugMain --   Style[40]: id='Caption', name='Caption', type=paragraph, basedOn='Normal', outlineLvl=null
+23:45:58.472 [main] INFO com.example.backend.DocxLoadDebugMain --   Style[41]: id='Style21', name='Указатель', type=paragraph, basedOn='Normal', outlineLvl=null
+23:45:58.473 [main] INFO com.example.backend.DocxLoadDebugMain --   Style[42]: id='IndexHeading', name='Index Heading', type=paragraph, basedOn='Style20', outlineLvl=null
+23:45:58.473 [main] INFO com.example.backend.DocxLoadDebugMain --   Style[43]: id='TOCHeading', name='TOC Heading', type=paragraph, basedOn='Heading1', outlineLvl=9
+23:45:58.473 [main] INFO com.example.backend.DocxLoadDebugMain --   Style[44]: id='Title', name='Title', type=paragraph, basedOn='Normal', outlineLvl=null
+23:45:58.473 [main] INFO com.example.backend.DocxLoadDebugMain --   Style[45]: id='-3', name='Диплом - заголовок', type=paragraph, basedOn='Heading1', outlineLvl=null
+23:45:58.473 [main] INFO com.example.backend.DocxLoadDebugMain --   Style[46]: id='TOC1', name='TOC 1', type=paragraph, basedOn='Normal', outlineLvl=null
+23:45:58.473 [main] INFO com.example.backend.DocxLoadDebugMain --   Style[47]: id='-4', name='Диплом - обычный текст', type=paragraph, basedOn='Normal', outlineLvl=null
+23:45:58.473 [main] INFO com.example.backend.DocxLoadDebugMain --   Style[48]: id='HeaderandFooter', name='Header and Footer', type=paragraph, basedOn='Normal', outlineLvl=null
+23:45:58.473 [main] INFO com.example.backend.DocxLoadDebugMain --   Style[49]: id='Header', name='Header', type=paragraph, basedOn='Normal', outlineLvl=null
+23:45:58.473 [main] INFO com.example.backend.DocxLoadDebugMain --   Style[50]: id='Footer', name='Footer', type=paragraph, basedOn='Normal', outlineLvl=null
+23:45:58.473 [main] INFO com.example.backend.DocxLoadDebugMain --   Style[51]: id='-21', name='Диплом - заголовок 2', type=paragraph, basedOn='Heading2', outlineLvl=null
+23:45:58.473 [main] INFO com.example.backend.DocxLoadDebugMain --   Style[52]: id='ListParagraph', name='List Paragraph', type=paragraph, basedOn='Normal', outlineLvl=null
+23:45:58.473 [main] INFO com.example.backend.DocxLoadDebugMain --   Style[53]: id='FootnoteText', name='Footnote Text', type=paragraph, basedOn='Normal', outlineLvl=null
+23:45:58.473 [main] INFO com.example.backend.DocxLoadDebugMain --   Style[54]: id='TOC2', name='TOC 2', type=paragraph, basedOn='Normal', outlineLvl=null
+23:45:58.473 [main] INFO com.example.backend.DocxLoadDebugMain --   Style[55]: id='AnnotationText', name='Annotation Text', type=paragraph, basedOn='Normal', outlineLvl=null
+23:45:58.473 [main] INFO com.example.backend.DocxLoadDebugMain --   Style[56]: id='annotationsubject', name='annotation subject', type=paragraph, basedOn='AnnotationText', outlineLvl=null
+23:45:58.473 [main] INFO com.example.backend.DocxLoadDebugMain --   Style[57]: id='-5', name='Диплом - подпункт', type=paragraph, basedOn='Normal', outlineLvl=null
+23:45:58.473 [main] INFO com.example.backend.DocxLoadDebugMain --   Style[58]: id='TOC3', name='TOC 3', type=paragraph, basedOn='Normal', outlineLvl=null
+23:45:58.473 [main] INFO com.example.backend.DocxLoadDebugMain --   Style[59]: id='NoSpacing', name='No Spacing', type=paragraph, basedOn='null', outlineLvl=null
+23:45:58.473 [main] INFO com.example.backend.DocxLoadDebugMain --   Style[60]: id='-6', name='Диплом - рисунок', type=paragraph, basedOn='-4', outlineLvl=null
+23:45:58.473 [main] INFO com.example.backend.DocxLoadDebugMain --   Style[61]: id='-7', name='Диплом - таблица', type=paragraph, basedOn='-4', outlineLvl=null
+23:45:58.473 [main] INFO com.example.backend.DocxLoadDebugMain --   Style[62]: id='-8', name='Диплом - код', type=paragraph, basedOn='Normal', outlineLvl=null
+23:45:58.473 [main] INFO com.example.backend.DocxLoadDebugMain --   Style[63]: id='NormalWeb', name='Normal (Web)', type=paragraph, basedOn='Normal', outlineLvl=null
+23:45:58.473 [main] INFO com.example.backend.DocxLoadDebugMain --   Style[64]: id='-9', name='Диплом - пункт', type=paragraph, basedOn='-5', outlineLvl=null
+23:45:58.473 [main] INFO com.example.backend.DocxLoadDebugMain --   Style[65]: id='Style22', name='Без списка', type=numbering, basedOn='null', outlineLvl=null
+23:45:58.473 [main] INFO com.example.backend.DocxLoadDebugMain --   Style[66]: id='TableNormal', name='Normal Table', type=table, basedOn='null', outlineLvl=null
+23:45:58.473 [main] INFO com.example.backend.DocxLoadDebugMain --   Style[67]: id='TableGrid', name='Table Grid', type=table, basedOn='TableNormal', outlineLvl=null
+23:45:58.473 [main] INFO com.example.backend.DocxLoadDebugMain -- Tables count: 2
+23:45:58.474 [main] INFO com.example.backend.DocxLoadDebugMain -- Table[0]: caption='null', paragraphIndex=56, pageIndex=8
+23:45:58.474 [main] INFO com.example.backend.DocxLoadDebugMain -- Table[1]: caption='null', paragraphIndex=60, pageIndex=9
+23:45:58.474 [main] INFO com.example.backend.DocxLoadDebugMain -- Figures count: 1
+23:45:58.474 [main] INFO com.example.backend.DocxLoadDebugMain -- Figure[0]: caption='Рисунок j – Фото ИТМО', paragraphIndex=63, pageIndex=10
+23:45:58.474 [main] INFO com.example.backend.DocxLoadDebugMain -- Paragraphs count: 65
+23:45:58.474 [main] INFO com.example.backend.DocxLoadDebugMain -- Paragraph[0]: pages=1-1, styleId='TOCHeading', styleName='TOC Heading', outlineLvl=9, caps=false, smallCaps=false, text='СОДЕРЖАНИЕ', fontName='Calibri Light', fontSizePt=16.0, bold=false, italic=false, colorHex='2F5496', alignment='LEFT', lineSpacing=0.0, firstLineIndentCm=null, leftIndentCm=null
+23:45:58.474 [main] INFO com.example.backend.DocxLoadDebugMain -- Paragraph[1]: pages=1-1, styleId='TOC1', styleName='TOC 1', outlineLvl=null, caps=false, smallCaps=false, text='СПИСОК СОКРАЩЕНИЙ И УСЛОВНЫХ ОБОЗНАЧЕНИЙ      8', fontName='Calibri', fontSizePt=11.0, bold=false, italic=false, colorHex='000000', alignment='LEFT', lineSpacing=1.0791666666666666, firstLineIndentCm=null, leftIndentCm=null
+23:45:58.474 [main] INFO com.example.backend.DocxLoadDebugMain -- Paragraph[2]: pages=1-1, styleId='TOC1', styleName='TOC 1', outlineLvl=null, caps=false, smallCaps=false, text='ТЕРМИНЫ И ОПРЕДЕЛЕНИЯ 9', fontName='Calibri', fontSizePt=11.0, bold=false, italic=false, colorHex='000000', alignment='LEFT', lineSpacing=1.0791666666666666, firstLineIndentCm=null, leftIndentCm=null
+23:45:58.474 [main] INFO com.example.backend.DocxLoadDebugMain -- Paragraph[3]: pages=1-1, styleId='TOC1', styleName='TOC 1', outlineLvl=null, caps=false, smallCaps=false, text=' ВВЕДЕНИЕ     9', fontName='Calibri', fontSizePt=11.0, bold=false, italic=false, colorHex='000000', alignment='LEFT', lineSpacing=1.0791666666666666, firstLineIndentCm=null, leftIndentCm=null
+23:45:58.474 [main] INFO com.example.backend.DocxLoadDebugMain -- Paragraph[4]: pages=1-1, styleId='TOC1', styleName='TOC 1', outlineLvl=null, caps=false, smallCaps=false, text='1. ОБОСНОВАНИЕ И ТРЕБОВАНИЯ   10', fontName='Calibri', fontSizePt=11.0, bold=false, italic=false, colorHex='000000', alignment='LEFT', lineSpacing=1.0791666666666666, firstLineIndentCm=null, leftIndentCm=null
+23:45:58.474 [main] INFO com.example.backend.DocxLoadDebugMain -- Paragraph[5]: pages=1-1, styleId='TOC2', styleName='TOC 2', outlineLvl=null, caps=false, smallCaps=false, text='1.1 Контекст и актуальность области   10', fontName='Calibri', fontSizePt=11.0, bold=false, italic=false, colorHex='000000', alignment='LEFT', lineSpacing=1.0791666666666666, firstLineIndentCm=null, leftIndentCm=0.3880070546737213
+23:45:58.474 [main] INFO com.example.backend.DocxLoadDebugMain -- Paragraph[6]: pages=1-1, styleId='TOC2', styleName='TOC 2', outlineLvl=null, caps=false, smallCaps=false, text='1.6 Выводы    10', fontName='Calibri', fontSizePt=11.0, bold=false, italic=false, colorHex='000000', alignment='LEFT', lineSpacing=1.0791666666666666, firstLineIndentCm=null, leftIndentCm=0.3880070546737213
+23:45:58.474 [main] INFO com.example.backend.DocxLoadDebugMain -- Paragraph[7]: pages=1-1, styleId='TOC2', styleName='TOC 2', outlineLvl=null, caps=false, smallCaps=false, text='1.7 Маленький пенис   10', fontName='Calibri', fontSizePt=11.0, bold=false, italic=false, colorHex='000000', alignment='LEFT', lineSpacing=1.0791666666666666, firstLineIndentCm=null, leftIndentCm=0.3880070546737213
+23:45:58.474 [main] INFO com.example.backend.DocxLoadDebugMain -- Paragraph[8]: pages=1-1, styleId='TOC1', styleName='TOC 1', outlineLvl=null, caps=false, smallCaps=false, text='2. ПРОЕКТНЫЙ РАЗДЕЛ   11', fontName='Calibri', fontSizePt=11.0, bold=false, italic=false, colorHex='000000', alignment='LEFT', lineSpacing=1.0791666666666666, firstLineIndentCm=null, leftIndentCm=null
+23:45:58.475 [main] INFO com.example.backend.DocxLoadDebugMain -- Paragraph[9]: pages=1-1, styleId='TOC2', styleName='TOC 2', outlineLvl=null, caps=false, smallCaps=false, text='2.1 Определение темы и подходов       11', fontName='Calibri', fontSizePt=11.0, bold=false, italic=false, colorHex='000000', alignment='LEFT', lineSpacing=1.0791666666666666, firstLineIndentCm=null, leftIndentCm=0.3880070546737213
+23:45:58.475 [main] INFO com.example.backend.DocxLoadDebugMain -- Paragraph[10]: pages=1-1, styleId='TOC2', styleName='TOC 2', outlineLvl=null, caps=false, smallCaps=false, text='2.6 Выводы   11', fontName='Calibri', fontSizePt=11.0, bold=false, italic=false, colorHex='000000', alignment='LEFT', lineSpacing=1.0791666666666666, firstLineIndentCm=null, leftIndentCm=0.3880070546737213
+23:45:58.475 [main] INFO com.example.backend.DocxLoadDebugMain -- Paragraph[11]: pages=1-1, styleId='TOC1', styleName='TOC 1', outlineLvl=null, caps=false, smallCaps=false, text=' 3. РАЗРАБОТКА       11', fontName='Calibri', fontSizePt=11.0, bold=false, italic=false, colorHex='000000', alignment='LEFT', lineSpacing=1.0791666666666666, firstLineIndentCm=null, leftIndentCm=null
+23:45:58.475 [main] INFO com.example.backend.DocxLoadDebugMain -- Paragraph[12]: pages=1-1, styleId='TOC2', styleName='TOC 2', outlineLvl=null, caps=false, smallCaps=false, text='3.1 Определение темы и подходов      11', fontName='Calibri', fontSizePt=11.0, bold=false, italic=false, colorHex='000000', alignment='LEFT', lineSpacing=1.0791666666666666, firstLineIndentCm=null, leftIndentCm=0.3880070546737213
+23:45:58.475 [main] INFO com.example.backend.DocxLoadDebugMain -- Paragraph[13]: pages=1-1, styleId='TOC2', styleName='TOC 2', outlineLvl=null, caps=false, smallCaps=false, text='3.2 Яйца     11', fontName='Calibri', fontSizePt=11.0, bold=false, italic=false, colorHex='000000', alignment='LEFT', lineSpacing=1.0791666666666666, firstLineIndentCm=null, leftIndentCm=0.3880070546737213
+23:45:58.475 [main] INFO com.example.backend.DocxLoadDebugMain -- Paragraph[14]: pages=1-1, styleId='TOC2', styleName='TOC 2', outlineLvl=null, caps=false, smallCaps=false, text='3.52 Шлюшка  11', fontName='Calibri', fontSizePt=11.0, bold=false, italic=false, colorHex='000000', alignment='LEFT', lineSpacing=1.0791666666666666, firstLineIndentCm=null, leftIndentCm=0.3880070546737213
+23:45:58.475 [main] INFO com.example.backend.DocxLoadDebugMain -- Paragraph[15]: pages=1-1, styleId='TOC2', styleName='TOC 2', outlineLvl=null, caps=false, smallCaps=false, text='3.53 Гавноооооооо    11', fontName='Calibri', fontSizePt=11.0, bold=false, italic=false, colorHex='000000', alignment='LEFT', lineSpacing=1.0791666666666666, firstLineIndentCm=null, leftIndentCm=0.3880070546737213
+23:45:58.475 [main] INFO com.example.backend.DocxLoadDebugMain -- Paragraph[16]: pages=1-1, styleId='TOC2', styleName='TOC 2', outlineLvl=null, caps=false, smallCaps=false, text='2.52 Че за хуйня     11', fontName='Calibri', fontSizePt=11.0, bold=false, italic=false, colorHex='000000', alignment='LEFT', lineSpacing=1.0791666666666666, firstLineIndentCm=null, leftIndentCm=0.3880070546737213
+23:45:58.475 [main] INFO com.example.backend.DocxLoadDebugMain -- Paragraph[17]: pages=1-1, styleId='TOC1', styleName='TOC 1', outlineLvl=null, caps=false, smallCaps=false, text='4. АНАЛИЗ РЕЗУЛЬТАТОВ        12', fontName='Calibri', fontSizePt=11.0, bold=false, italic=false, colorHex='000000', alignment='LEFT', lineSpacing=1.0791666666666666, firstLineIndentCm=null, leftIndentCm=null
+23:45:58.475 [main] INFO com.example.backend.DocxLoadDebugMain -- Paragraph[18]: pages=1-1, styleId='TOC2', styleName='TOC 2', outlineLvl=null, caps=false, smallCaps=false, text='4.1 Процесс и результаты тестирования        12', fontName='Calibri', fontSizePt=11.0, bold=false, italic=false, colorHex='000000', alignment='LEFT', lineSpacing=1.0791666666666666, firstLineIndentCm=null, leftIndentCm=0.3880070546737213
+23:45:58.475 [main] INFO com.example.backend.DocxLoadDebugMain -- Paragraph[19]: pages=1-1, styleId='TOC2', styleName='TOC 2', outlineLvl=null, caps=false, smallCaps=false, text='     12', fontName='Calibri', fontSizePt=11.0, bold=false, italic=false, colorHex='000000', alignment='LEFT', lineSpacing=1.0791666666666666, firstLineIndentCm=null, leftIndentCm=0.3880070546737213
+23:45:58.476 [main] INFO com.example.backend.DocxLoadDebugMain -- Paragraph[20]: pages=1-1, styleId='TOC1', styleName='TOC 1', outlineLvl=null, caps=false, smallCaps=false, text='ЗАКЛЮЧЕНИЕ   13', fontName='Calibri', fontSizePt=11.0, bold=false, italic=false, colorHex='000000', alignment='LEFT', lineSpacing=1.0791666666666666, firstLineIndentCm=null, leftIndentCm=null
+23:45:58.476 [main] INFO com.example.backend.DocxLoadDebugMain -- Paragraph[21]: pages=1-1, styleId='TOC1', styleName='TOC 1', outlineLvl=null, caps=false, smallCaps=false, text='СПИСОК ИСПОЛЬЗОВАННЫХ ИСТОЧНИКОВ     13', fontName='Calibri', fontSizePt=11.0, bold=false, italic=false, colorHex='000000', alignment='LEFT', lineSpacing=1.0791666666666666, firstLineIndentCm=null, leftIndentCm=null
+23:45:58.476 [main] INFO com.example.backend.DocxLoadDebugMain -- Paragraph[22]: pages=1-1, styleId='TOC1', styleName='TOC 1', outlineLvl=null, caps=false, smallCaps=false, text='ПРИЛОЖЕНИЕ А 14', fontName='Calibri', fontSizePt=11.0, bold=false, italic=false, colorHex='000000', alignment='LEFT', lineSpacing=1.0791666666666666, firstLineIndentCm=null, leftIndentCm=null
+23:45:58.476 [main] INFO com.example.backend.DocxLoadDebugMain -- Paragraph[23]: pages=1-1, styleId='TOC1', styleName='TOC 1', outlineLvl=null, caps=false, smallCaps=false, text='ПРИЛОЖЕНИЕ Б 15', fontName='Calibri', fontSizePt=11.0, bold=false, italic=false, colorHex='000000', alignment='LEFT', lineSpacing=1.0791666666666666, firstLineIndentCm=null, leftIndentCm=null
+23:45:58.476 [main] INFO com.example.backend.DocxLoadDebugMain -- Paragraph[24]: pages=1-1, styleId='TOC1', styleName='TOC 1', outlineLvl=null, caps=false, smallCaps=false, text='ПРИЛОЖЕНИЕ В 16', fontName='Calibri', fontSizePt=11.0, bold=false, italic=false, colorHex='000000', alignment='LEFT', lineSpacing=1.0791666666666666, firstLineIndentCm=null, leftIndentCm=null
+23:45:58.476 [main] INFO com.example.backend.DocxLoadDebugMain -- Paragraph[25]: pages=1-1, styleId='null', styleName='null', outlineLvl=null, caps=null, smallCaps=null, text='', fontName='null', fontSizePt=null, bold=false, italic=false, colorHex='null', alignment='LEFT', lineSpacing=null, firstLineIndentCm=null, leftIndentCm=null
+23:45:58.476 [main] INFO com.example.backend.DocxLoadDebugMain -- Paragraph[26]: pages=2-2, styleId='-3', styleName='Диплом - заголовок', outlineLvl=0, caps=false, smallCaps=false, text='СПИСОК СОКРАЩЕНИЙ И УСЛОВНЫХ ОБОЗНАЧЕНИЙ', fontName='Times New Roman', fontSizePt=16.0, bold=false, italic=false, colorHex='000000', alignment='LEFT', lineSpacing=1.0, firstLineIndentCm=null, leftIndentCm=null
+23:45:58.476 [main] INFO com.example.backend.DocxLoadDebugMain -- Paragraph[27]: pages=2-2, styleId='Normal', styleName='Normal', outlineLvl=null, caps=false, smallCaps=false, text='БД – База Данных', fontName='Times New Roman', fontSizePt=14.0, bold=false, italic=false, colorHex='000000', alignment='BOTH', lineSpacing=1.5, firstLineIndentCm=null, leftIndentCm=null
+23:45:58.476 [main] INFO com.example.backend.DocxLoadDebugMain -- Paragraph[28]: pages=2-2, styleId='Normal', styleName='Normal', outlineLvl=null, caps=false, smallCaps=false, text='UI – User Interface', fontName='Times New Roman', fontSizePt=14.0, bold=false, italic=false, colorHex='000000', alignment='BOTH', lineSpacing=1.5, firstLineIndentCm=null, leftIndentCm=null
+23:45:58.476 [main] INFO com.example.backend.DocxLoadDebugMain -- Paragraph[29]: pages=2-2, styleId='Normal', styleName='Normal', outlineLvl=null, caps=false, smallCaps=false, text='UX – User Experience', fontName='Times New Roman', fontSizePt=14.0, bold=false, italic=false, colorHex='000000', alignment='BOTH', lineSpacing=1.5, firstLineIndentCm=null, leftIndentCm=null
+23:45:58.476 [main] INFO com.example.backend.DocxLoadDebugMain -- Paragraph[30]: pages=2-2, styleId='Normal', styleName='Normal', outlineLvl=null, caps=false, smallCaps=false, text='API – Application Programming Interface', fontName='Times New Roman', fontSizePt=14.0, bold=false, italic=false, colorHex='000000', alignment='BOTH', lineSpacing=1.5, firstLineIndentCm=null, leftIndentCm=null
+23:45:58.476 [main] INFO com.example.backend.DocxLoadDebugMain -- Paragraph[31]: pages=3-3, styleId='-3', styleName='Диплом - заголовок', outlineLvl=0, caps=false, smallCaps=false, text='ТЕРМИНЫ И ОПРЕДЕЛЕНИЯ', fontName='Times New Roman', fontSizePt=16.0, bold=false, italic=false, colorHex='000000', alignment='LEFT', lineSpacing=1.0, firstLineIndentCm=null, leftIndentCm=null
+23:45:58.476 [main] INFO com.example.backend.DocxLoadDebugMain -- Paragraph[32]: pages=3-3, styleId='Normal', styleName='Normal', outlineLvl=null, caps=false, smallCaps=false, text='Application Programming Interface – это набор публичных методов и соглашений компонента, через которые другие части системы могут безопасно взаимодействовать с ним, не зная внутренней реализации. [Ошибка: источник перекрёстной ссылки не найден].
+', fontName='Times New Roman', fontSizePt=14.0, bold=false, italic=false, colorHex='000000', alignment='BOTH', lineSpacing=1.5, firstLineIndentCm=null, leftIndentCm=null
+23:45:58.476 [main] INFO com.example.backend.DocxLoadDebugMain -- Paragraph[33]: pages=3-3, styleId='-3', styleName='Диплом - заголовок', outlineLvl=0, caps=false, smallCaps=false, text='
+ВВЕДЕНИЕ', fontName='Times New Roman', fontSizePt=16.0, bold=false, italic=false, colorHex='000000', alignment='LEFT', lineSpacing=1.0, firstLineIndentCm=null, leftIndentCm=null
+23:45:58.477 [main] INFO com.example.backend.DocxLoadDebugMain -- Paragraph[34]: pages=3-3, styleId='Normal', styleName='Normal', outlineLvl=null, caps=false, smallCaps=false, text='Учитывая ключевые сценарии поведения, перспективное планирование говорит о возможностях как самодостаточных, так и внешне зависимых концептуальных решений. И нет сомнений, что диаграммы связей своевременно верифицированы. В своём стремлении улучшить пользовательский опыт мы упускаем, что действия представителей оппозиции, вне зависимости от их уровня, должны быть указаны как претенденты на роль ключевых факторов.', fontName='Times New Roman', fontSizePt=14.0, bold=false, italic=false, colorHex='000000', alignment='BOTH', lineSpacing=1.5, firstLineIndentCm=null, leftIndentCm=null
+23:45:58.477 [main] INFO com.example.backend.DocxLoadDebugMain -- Paragraph[35]: pages=4-4, styleId='-3', styleName='Диплом - заголовок', outlineLvl=0, caps=false, smallCaps=false, text='1. ОБОСНОВАНИЕ И ТРЕБОВАНИЯ', fontName='Times New Roman', fontSizePt=16.0, bold=false, italic=false, colorHex='000000', alignment='LEFT', lineSpacing=1.0, firstLineIndentCm=null, leftIndentCm=null
+23:45:58.477 [main] INFO com.example.backend.DocxLoadDebugMain -- Paragraph[36]: pages=4-4, styleId='-21', styleName='Диплом - заголовок 2', outlineLvl=1, caps=false, smallCaps=false, text='1.1 Контекст и актуальность области', fontName='Times New Roman', fontSizePt=14.0, bold=false, italic=false, colorHex='000000', alignment='LEFT', lineSpacing=1.0791666666666666, firstLineIndentCm=1.2504409171075836, leftIndentCm=null
+23:45:58.477 [main] INFO com.example.backend.DocxLoadDebugMain -- Paragraph[37]: pages=4-4, styleId='-21', styleName='Диплом - заголовок 2', outlineLvl=1, caps=false, smallCaps=false, text='1.6 Выводы', fontName='Times New Roman', fontSizePt=14.0, bold=false, italic=false, colorHex='000000', alignment='LEFT', lineSpacing=1.0791666666666666, firstLineIndentCm=1.2504409171075836, leftIndentCm=null
+23:45:58.477 [main] INFO com.example.backend.DocxLoadDebugMain -- Paragraph[38]: pages=4-4, styleId='-21', styleName='Диплом - заголовок 2', outlineLvl=1, caps=false, smallCaps=false, text='', fontName='Times New Roman', fontSizePt=14.0, bold=false, italic=false, colorHex='000000', alignment='LEFT', lineSpacing=1.0791666666666666, firstLineIndentCm=1.2504409171075836, leftIndentCm=null
+23:45:58.477 [main] INFO com.example.backend.DocxLoadDebugMain -- Paragraph[39]: pages=5-5, styleId='-3', styleName='Диплом - заголовок', outlineLvl=0, caps=false, smallCaps=false, text='2. ПРОЕКТНЫЙ РАЗДЕЛ', fontName='Times New Roman', fontSizePt=16.0, bold=false, italic=false, colorHex='000000', alignment='LEFT', lineSpacing=1.0, firstLineIndentCm=null, leftIndentCm=null
+23:45:58.477 [main] INFO com.example.backend.DocxLoadDebugMain -- Paragraph[40]: pages=5-5, styleId='-21', styleName='Диплом - заголовок 2', outlineLvl=1, caps=false, smallCaps=false, text='2.1 Определение темы и подходов ', fontName='Times New Roman', fontSizePt=14.0, bold=false, italic=false, colorHex='000000', alignment='LEFT', lineSpacing=1.0791666666666666, firstLineIndentCm=1.2504409171075836, leftIndentCm=null
+23:45:58.477 [main] INFO com.example.backend.DocxLoadDebugMain -- Paragraph[41]: pages=5-5, styleId='-21', styleName='Диплом - заголовок 2', outlineLvl=1, caps=false, smallCaps=false, text='2.6 Выводы', fontName='Times New Roman', fontSizePt=14.0, bold=false, italic=false, colorHex='000000', alignment='LEFT', lineSpacing=1.0791666666666666, firstLineIndentCm=1.2504409171075836, leftIndentCm=null
+23:45:58.477 [main] INFO com.example.backend.DocxLoadDebugMain -- Paragraph[42]: pages=5-5, styleId='-3', styleName='Диплом - заголовок', outlineLvl=0, caps=false, smallCaps=false, text='
+
+
+3. РАЗРАБОТКА', fontName='Times New Roman', fontSizePt=16.0, bold=false, italic=false, colorHex='000000', alignment='LEFT', lineSpacing=1.0, firstLineIndentCm=null, leftIndentCm=null
+23:45:58.477 [main] INFO com.example.backend.DocxLoadDebugMain -- Paragraph[43]: pages=5-5, styleId='-21', styleName='Диплом - заголовок 2', outlineLvl=1, caps=false, smallCaps=false, text='3.1 Определение темы и подходов ', fontName='Times New Roman', fontSizePt=14.0, bold=false, italic=false, colorHex='000000', alignment='LEFT', lineSpacing=1.0791666666666666, firstLineIndentCm=1.2504409171075836, leftIndentCm=null
+23:45:58.477 [main] INFO com.example.backend.DocxLoadDebugMain -- Paragraph[44]: pages=5-5, styleId='-21', styleName='Диплом - заголовок 2', outlineLvl=1, caps=false, smallCaps=false, text='3.2 Яйца', fontName='Times New Roman', fontSizePt=14.0, bold=false, italic=false, colorHex='000000', alignment='LEFT', lineSpacing=1.0791666666666666, firstLineIndentCm=1.2504409171075836, leftIndentCm=null
+23:45:58.477 [main] INFO com.example.backend.DocxLoadDebugMain -- Paragraph[45]: pages=5-5, styleId='-21', styleName='Диплом - заголовок 2', outlineLvl=1, caps=false, smallCaps=false, text='3.52 Шлюшка', fontName='Times New Roman', fontSizePt=14.0, bold=false, italic=false, colorHex='000000', alignment='LEFT', lineSpacing=1.0791666666666666, firstLineIndentCm=1.2504409171075836, leftIndentCm=null
+23:45:58.477 [main] INFO com.example.backend.DocxLoadDebugMain -- Paragraph[46]: pages=5-5, styleId='-21', styleName='Диплом - заголовок 2', outlineLvl=1, caps=false, smallCaps=false, text='3.53 Гавноооооооо', fontName='Times New Roman', fontSizePt=14.0, bold=false, italic=false, colorHex='000000', alignment='LEFT', lineSpacing=1.0791666666666666, firstLineIndentCm=1.2504409171075836, leftIndentCm=null
+23:45:58.477 [main] INFO com.example.backend.DocxLoadDebugMain -- Paragraph[47]: pages=5-5, styleId='-21', styleName='Диплом - заголовок 2', outlineLvl=1, caps=false, smallCaps=false, text='2.52 Че за хуйня', fontName='Times New Roman', fontSizePt=14.0, bold=false, italic=false, colorHex='000000', alignment='LEFT', lineSpacing=1.0791666666666666, firstLineIndentCm=1.2504409171075836, leftIndentCm=null
+23:45:58.477 [main] INFO com.example.backend.DocxLoadDebugMain -- Paragraph[48]: pages=6-6, styleId='-3', styleName='Диплом - заголовок', outlineLvl=0, caps=false, smallCaps=false, text='4. АНАЛИЗ РЕЗУЛЬТАТОВ', fontName='Times New Roman', fontSizePt=16.0, bold=false, italic=false, colorHex='000000', alignment='LEFT', lineSpacing=1.0, firstLineIndentCm=null, leftIndentCm=null
+23:45:58.477 [main] INFO com.example.backend.DocxLoadDebugMain -- Paragraph[49]: pages=6-6, styleId='-21', styleName='Диплом - заголовок 2', outlineLvl=1, caps=false, smallCaps=false, text='4.1 Процесс и результаты тестирования', fontName='Times New Roman', fontSizePt=14.0, bold=false, italic=false, colorHex='000000', alignment='LEFT', lineSpacing=1.0791666666666666, firstLineIndentCm=1.2504409171075836, leftIndentCm=null
+23:45:58.477 [main] INFO com.example.backend.DocxLoadDebugMain -- Paragraph[50]: pages=6-6, styleId='-21', styleName='Диплом - заголовок 2', outlineLvl=1, caps=false, smallCaps=false, text='', fontName='Times New Roman', fontSizePt=14.0, bold=false, italic=false, colorHex='000000', alignment='LEFT', lineSpacing=1.0791666666666666, firstLineIndentCm=1.2504409171075836, leftIndentCm=null
+23:45:58.477 [main] INFO com.example.backend.DocxLoadDebugMain -- Paragraph[51]: pages=6-6, styleId='-21', styleName='Диплом - заголовок 2', outlineLvl=1, caps=false, smallCaps=false, text=' ', fontName='Times New Roman', fontSizePt=14.0, bold=false, italic=false, colorHex='000000', alignment='LEFT', lineSpacing=1.0791666666666666, firstLineIndentCm=1.2504409171075836, leftIndentCm=null
+23:45:58.477 [main] INFO com.example.backend.DocxLoadDebugMain -- Paragraph[52]: pages=7-7, styleId='-3', styleName='Диплом - заголовок', outlineLvl=0, caps=false, smallCaps=false, text='ЗАКЛЮЧЕНИЕ', fontName='Times New Roman', fontSizePt=16.0, bold=false, italic=false, colorHex='000000', alignment='LEFT', lineSpacing=1.0, firstLineIndentCm=null, leftIndentCm=null
+23:45:58.478 [main] INFO com.example.backend.DocxLoadDebugMain -- Paragraph[53]: pages=7-7, styleId='-4', styleName='Диплом - обычный текст', outlineLvl=null, caps=false, smallCaps=false, text='Учитывая ключевые сценарии поведения, перспективное планирование говорит о возможностях как самодостаточных, так и внешне зависимых концептуальных решений. И нет сомнений, что диаграммы связей своевременно верифицированы. В своём стремлении улучшить пользовательский опыт мы упускаем, что действия представителей оппозиции, вне зависимости от их уровня, должны быть указаны как претенденты на роль ключевых факторов.', fontName='Times New Roman', fontSizePt=14.0, bold=false, italic=false, colorHex='000000', alignment='LEFT', lineSpacing=1.5, firstLineIndentCm=1.2504409171075836, leftIndentCm=null
+23:45:58.478 [main] INFO com.example.backend.DocxLoadDebugMain -- Paragraph[54]: pages=8-8, styleId='-3', styleName='Диплом - заголовок', outlineLvl=0, caps=false, smallCaps=false, text='ПРИЛОЖЕНИЕ А', fontName='Times New Roman', fontSizePt=16.0, bold=false, italic=false, colorHex='000000', alignment='LEFT', lineSpacing=1.0, firstLineIndentCm=null, leftIndentCm=null
+23:45:58.478 [main] INFO com.example.backend.DocxLoadDebugMain -- Paragraph[55]: pages=8-8, styleId='-4', styleName='Диплом - обычный текст', outlineLvl=null, caps=false, smallCaps=false, text='Листинг i – Пример программы', fontName='Times New Roman', fontSizePt=14.0, bold=false, italic=false, colorHex='000000', alignment='LEFT', lineSpacing=1.0, firstLineIndentCm=1.2504409171075836, leftIndentCm=null
+23:45:58.478 [main] INFO com.example.backend.DocxLoadDebugMain -- Paragraph[56]: pages=8-8, styleId='Normal', styleName='Normal', outlineLvl=null, caps=false, smallCaps=false, text='public class HelloWorld {
+    public static void main(String[] args) {
+        System.out.println("Hello, World!");
+
+        for (int i = 1; i <= 5; i++) {
+            System.out.print(i + " ");
+        }
+
+        int[] numbers = {2, 4, 6, 8, 10};
+        int sum = 0;
+        for (int num : numbers) {
+            sum += num;
+        }
+        System.out.println("\nSum: " + sum);
+    }
+}', fontName='Calibri', fontSizePt=11.0, bold=false, italic=false, colorHex='000000', alignment='LEFT', lineSpacing=1.0, firstLineIndentCm=null, leftIndentCm=null
+23:45:58.478 [main] INFO com.example.backend.DocxLoadDebugMain -- Paragraph[57]: pages=8-8, styleId='null', styleName='null', outlineLvl=null, caps=null, smallCaps=null, text='', fontName='null', fontSizePt=null, bold=false, italic=false, colorHex='null', alignment='LEFT', lineSpacing=null, firstLineIndentCm=null, leftIndentCm=null
+23:45:58.478 [main] INFO com.example.backend.DocxLoadDebugMain -- Paragraph[58]: pages=9-9, styleId='-3', styleName='Диплом - заголовок', outlineLvl=0, caps=false, smallCaps=false, text='ПРИЛОЖЕНИЕ Б', fontName='Times New Roman', fontSizePt=16.0, bold=false, italic=false, colorHex='000000', alignment='LEFT', lineSpacing=1.0, firstLineIndentCm=null, leftIndentCm=null
+23:45:58.478 [main] INFO com.example.backend.DocxLoadDebugMain -- Paragraph[59]: pages=9-9, styleId='-4', styleName='Диплом - обычный текст', outlineLvl=null, caps=false, smallCaps=false, text='Листинг i+1 – Пример программы', fontName='Times New Roman', fontSizePt=14.0, bold=false, italic=false, colorHex='000000', alignment='LEFT', lineSpacing=1.0, firstLineIndentCm=1.2504409171075836, leftIndentCm=null
+23:45:58.478 [main] INFO com.example.backend.DocxLoadDebugMain -- Paragraph[60]: pages=9-9, styleId='-8', styleName='Диплом - код', outlineLvl=null, caps=false, smallCaps=false, text='public class HelloWorld {
+    public static void main(String[] args) {
+        System.out.println("Hello, World!");
+
+        for (int i = 1; i <= 5; i++) {
+            System.out.print(i + " ");
+        }
+
+        int[] numbers = {2, 4, 6, 8, 10};
+        int sum = 0;
+        for (int num : numbers) {
+            sum += num;
+        }
+        System.out.println("\nSum: " + sum);
+    }
+}', fontName='Courier New', fontSizePt=10.0, bold=false, italic=false, colorHex='000000', alignment='LEFT', lineSpacing=1.0, firstLineIndentCm=null, leftIndentCm=null
+23:45:58.478 [main] INFO com.example.backend.DocxLoadDebugMain -- Paragraph[61]: pages=9-9, styleId='null', styleName='null', outlineLvl=null, caps=null, smallCaps=null, text='', fontName='null', fontSizePt=null, bold=false, italic=false, colorHex='null', alignment='LEFT', lineSpacing=null, firstLineIndentCm=null, leftIndentCm=null
+23:45:58.478 [main] INFO com.example.backend.DocxLoadDebugMain -- Paragraph[62]: pages=10-10, styleId='-3', styleName='Диплом - заголовок', outlineLvl=0, caps=false, smallCaps=false, text='ПРИЛОЖЕНИЕ В', fontName='Times New Roman', fontSizePt=16.0, bold=false, italic=false, colorHex='000000', alignment='LEFT', lineSpacing=1.0, firstLineIndentCm=null, leftIndentCm=null
+23:45:58.478 [main] INFO com.example.backend.DocxLoadDebugMain -- Paragraph[63]: pages=10-10, styleId='-6', styleName='Диплом - рисунок', outlineLvl=null, caps=false, smallCaps=false, text='', fontName='Times New Roman', fontSizePt=14.0, bold=false, italic=false, colorHex='000000', alignment='LEFT', lineSpacing=0.0, firstLineIndentCm=1.2504409171075836, leftIndentCm=null
+23:45:58.478 [main] INFO com.example.backend.DocxLoadDebugMain -- Paragraph[64]: pages=10-10, styleId='-6', styleName='Диплом - рисунок', outlineLvl=null, caps=false, smallCaps=false, text='Рисунок j – Фото ИТМО', fontName='Times New Roman', fontSizePt=14.0, bold=false, italic=false, colorHex='000000', alignment='LEFT', lineSpacing=0.0, firstLineIndentCm=1.2504409171075836, leftIndentCm=null
+23:45:58.480 [main] INFO com.example.backend.DocxLoadDebugMain -- ФТ-4 (обязательные разделы, прописные заголовки), замечаний: 2
+23:45:58.480 [main] INFO com.example.backend.DocxLoadDebugMain --   ФТ-4: в тексте не найден обязательный раздел «СПИСОК ИСПОЛЬЗОВАННЫХ ИСТОЧНИКОВ» (заголовок уровня 0).
+23:45:58.481 [main] INFO com.example.backend.DocxLoadDebugMain --   ФТ-4: в тексте не найден обязательный раздел «СОДЕРЖАНИЕ» (заголовок уровня 0).
+23:45:58.482 [main] INFO com.example.backend.DocxLoadDebugMain -- ФТ-5 (нумерация глав и подразделов), замечаний: 4
+23:45:58.482 [main] INFO com.example.backend.DocxLoadDebugMain --   ФТ-5: подраздел «2.52 Че за хуйня» начинается с 2.52, активная глава — 3 (нумерация должна относиться к текущей главе).
+23:45:58.482 [main] INFO com.example.backend.DocxLoadDebugMain --   ФТ-5: после «1.1 Контекст и актуальность области» ожидается следующий корректный номер в иерархии раздела, обнаружено «1.6 Выводы» (проверьте порядок 2.1 → 2.1.1 → 2.1.2 / 2.2 и отсутствие «2.2» → «2.1.1» или «2.2» → «2.3.1» без «2.3»).
+23:45:58.482 [main] INFO com.example.backend.DocxLoadDebugMain --   ФТ-5: после «2.1 Определение темы и подходов» ожидается следующий корректный номер в иерархии раздела, обнаружено «2.6 Выводы» (проверьте порядок 2.1 → 2.1.1 → 2.1.2 / 2.2 и отсутствие «2.2» → «2.1.1» или «2.2» → «2.3.1» без «2.3»).
+23:45:58.482 [main] INFO com.example.backend.DocxLoadDebugMain --   ФТ-5: после «3.2 Яйца» ожидается следующий корректный номер в иерархии раздела, обнаружено «3.52 Шлюшка» (проверьте порядок 2.1 → 2.1.1 → 2.1.2 / 2.2 и отсутствие «2.2» → «2.1.1» или «2.2» → «2.3.1» без «2.3»).
+23:45:58.485 [main] INFO com.example.backend.DocxLoadDebugMain -- ФТ-6 (начало с новой страницы), найдено замечаний: 2
+23:45:58.486 [main] INFO com.example.backend.DocxLoadDebugMain --   ФТ-6: блок «ВВЕДЕНИЕ» должен начинаться с новой страницы: начало на стр. 3, предыдущий абзац заканчивается на стр. 3.
+23:45:58.486 [main] INFO com.example.backend.DocxLoadDebugMain --   ФТ-6: блок «3. РАЗРАБОТКА» должен начинаться с новой страницы: начало на стр. 5, предыдущий абзац заканчивается на стр. 5.
+23:45:58.497 [main] INFO com.example.backend.DocxLoadDebugMain -- ФТ-7 (содержание: стили TOC, отточия, страницы, соответствие заголовкам), сообщений: 23
+23:45:58.497 [main] INFO com.example.backend.DocxLoadDebugMain --   ФТ-7: в содержании для «СПИСОК СОКРАЩЕНИЙ И УСЛОВНЫХ ОБОЗНАЧЕНИЙ» указана стр. 8, в документе заголовок начинается со стр. 2.
+23:45:58.497 [main] INFO com.example.backend.DocxLoadDebugMain --   ФТ-7: в содержании для «ТЕРМИНЫ И ОПРЕДЕЛЕНИЯ» указана стр. 9, в документе заголовок начинается со стр. 3.
+23:45:58.497 [main] INFO com.example.backend.DocxLoadDebugMain --   ФТ-7: в содержании для «ВВЕДЕНИЕ» указана стр. 9, в документе заголовок начинается со стр. 3.
+23:45:58.497 [main] INFO com.example.backend.DocxLoadDebugMain --   ФТ-7: в содержании для «1. ОБОСНОВАНИЕ И ТРЕБОВАНИЯ» указана стр. 10, в документе заголовок начинается со стр. 4.
+23:45:58.497 [main] INFO com.example.backend.DocxLoadDebugMain --   ФТ-7: в содержании для «1.1 Контекст и актуальность области» указана стр. 10, в документе заголовок начинается со стр. 4.
+23:45:58.497 [main] INFO com.example.backend.DocxLoadDebugMain --   ФТ-7: в содержании для «1.6 Выводы» указана стр. 10, в документе заголовок начинается со стр. 4.
+23:45:58.497 [main] INFO com.example.backend.DocxLoadDebugMain --   ФТ-7: в тексте нет заголовка из оглавления «1.7 Маленький пенис» (уровень TOC2 → outline 1) — в содержании есть пункт, которого нет в документе.
+23:45:58.497 [main] INFO com.example.backend.DocxLoadDebugMain --   ФТ-7: в содержании для «2. ПРОЕКТНЫЙ РАЗДЕЛ» указана стр. 11, в документе заголовок начинается со стр. 5.
+23:45:58.497 [main] INFO com.example.backend.DocxLoadDebugMain --   ФТ-7: в содержании для «2.1 Определение темы и подходов» указана стр. 11, в документе заголовок начинается со стр. 5.
+23:45:58.497 [main] INFO com.example.backend.DocxLoadDebugMain --   ФТ-7: в содержании для «2.6 Выводы» указана стр. 11, в документе заголовок начинается со стр. 5.
+23:45:58.498 [main] INFO com.example.backend.DocxLoadDebugMain --   ФТ-7: в содержании для «3. РАЗРАБОТКА» указана стр. 11, в документе заголовок начинается со стр. 5.
+23:45:58.498 [main] INFO com.example.backend.DocxLoadDebugMain --   ФТ-7: в содержании для «3.1 Определение темы и подходов» указана стр. 11, в документе заголовок начинается со стр. 5.
+23:45:58.498 [main] INFO com.example.backend.DocxLoadDebugMain --   ФТ-7: в содержании для «3.2 Яйца» указана стр. 11, в документе заголовок начинается со стр. 5.
+23:45:58.498 [main] INFO com.example.backend.DocxLoadDebugMain --   ФТ-7: в содержании для «3.52 Шлюшка» указана стр. 11, в документе заголовок начинается со стр. 5.
+23:45:58.498 [main] INFO com.example.backend.DocxLoadDebugMain --   ФТ-7: в содержании для «3.53 Гавноооооооо» указана стр. 11, в документе заголовок начинается со стр. 5.
+23:45:58.498 [main] INFO com.example.backend.DocxLoadDebugMain --   ФТ-7: в содержании для «2.52 Че за хуйня» указана стр. 11, в документе заголовок начинается со стр. 5.
+23:45:58.498 [main] INFO com.example.backend.DocxLoadDebugMain --   ФТ-7: в содержании для «4. АНАЛИЗ РЕЗУЛЬТАТОВ» указана стр. 12, в документе заголовок начинается со стр. 6.
+23:45:58.498 [main] INFO com.example.backend.DocxLoadDebugMain --   ФТ-7: в содержании для «4.1 Процесс и результаты тестирования» указана стр. 12, в документе заголовок начинается со стр. 6.
+23:45:58.498 [main] INFO com.example.backend.DocxLoadDebugMain --   ФТ-7: в содержании для «ЗАКЛЮЧЕНИЕ» указана стр. 13, в документе заголовок начинается со стр. 7.
+23:45:58.498 [main] INFO com.example.backend.DocxLoadDebugMain --   ФТ-7: в тексте нет заголовка из оглавления «СПИСОК ИСПОЛЬЗОВАННЫХ ИСТОЧНИКОВ» (уровень TOC1 → outline 0) — в содержании есть пункт, которого нет в документе.
+23:45:58.498 [main] INFO com.example.backend.DocxLoadDebugMain --   ФТ-7: в содержании для «ПРИЛОЖЕНИЕ А» указана стр. 14, в документе заголовок начинается со стр. 8.
+23:45:58.498 [main] INFO com.example.backend.DocxLoadDebugMain --   ФТ-7: в содержании для «ПРИЛОЖЕНИЕ Б» указана стр. 15, в документе заголовок начинается со стр. 9.
+23:45:58.498 [main] INFO com.example.backend.DocxLoadDebugMain --   ФТ-7: в содержании для «ПРИЛОЖЕНИЕ В» указана стр. 16, в документе заголовок начинается со стр. 10.
+23:45:58.509 [main] INFO com.example.backend.DocxLoadDebugMain -- Font distribution: {Times New Roman=35, Calibri=25, null=3, Courier New=1, Calibri Light=1}
+23:45:58.510 [main] INFO com.example.backend.DocxLoadDebugMain -- Font size distribution: {11.00=25, 14.00=24, 16.00=12, null=3, 10.00=1}
+23:45:58.510 [main] INFO com.example.backend.DocxLoadDebugMain -- Alignment distribution: {LEFT=59, BOTH=6}
+23:45:58.510 [main] INFO com.example.backend.DocxLoadDebugMain -- Line spacing distribution: {1.079=37, 1.000=15, 1.500=7, null=3, 0.000=3}
+23:45:58.510 [main] INFO com.example.backend.DocxLoadDebugMain -- Heading candidates:
+23:45:58.510 [main] INFO com.example.backend.DocxLoadDebugMain -- Heading[0]: text='СОДЕРЖАНИЕ', size=16.0, bold=false, alignment=LEFT
+23:45:58.510 [main] INFO com.example.backend.DocxLoadDebugMain -- Heading[1]: text='СПИСОК СОКРАЩЕНИЙ И УСЛОВНЫХ ОБОЗНАЧЕНИЙ    8', size=11.0, bold=false, alignment=LEFT
+23:45:58.510 [main] INFO com.example.backend.DocxLoadDebugMain -- Heading[2]: text='ТЕРМИНЫ И ОПРЕДЕЛЕНИЯ       9', size=11.0, bold=false, alignment=LEFT
+23:45:58.510 [main] INFO com.example.backend.DocxLoadDebugMain -- Heading[3]: text='ВВЕДЕНИЕ    9', size=11.0, bold=false, alignment=LEFT
+23:45:58.510 [main] INFO com.example.backend.DocxLoadDebugMain -- Heading[19]: text='12', size=11.0, bold=false, alignment=LEFT
+23:45:58.510 [main] INFO com.example.backend.DocxLoadDebugMain -- Heading[20]: text='ЗАКЛЮЧЕНИЕ 13', size=11.0, bold=false, alignment=LEFT
+23:45:58.510 [main] INFO com.example.backend.DocxLoadDebugMain -- Heading[21]: text='СПИСОК ИСПОЛЬЗОВАННЫХ ИСТОЧНИКОВ   13', size=11.0, bold=false, alignment=LEFT
+23:45:58.510 [main] INFO com.example.backend.DocxLoadDebugMain -- Heading[22]: text='ПРИЛОЖЕНИЕ А       14', size=11.0, bold=false, alignment=LEFT
+23:45:58.510 [main] INFO com.example.backend.DocxLoadDebugMain -- Heading[23]: text='ПРИЛОЖЕНИЕ Б       15', size=11.0, bold=false, alignment=LEFT
+23:45:58.510 [main] INFO com.example.backend.DocxLoadDebugMain -- Heading[24]: text='ПРИЛОЖЕНИЕ В       16', size=11.0, bold=false, alignment=LEFT
+23:45:58.512 [main] INFO com.example.backend.DocxLoadDebugMain -- Heading[26]: text='СПИСОК СОКРАЩЕНИЙ И УСЛОВНЫХ ОБОЗНАЧЕНИЙ', size=16.0, bold=false, alignment=LEFT
+23:45:58.512 [main] INFO com.example.backend.DocxLoadDebugMain -- Heading[31]: text='ТЕРМИНЫ И ОПРЕДЕЛЕНИЯ', size=16.0, bold=false, alignment=LEFT
+23:45:58.512 [main] INFO com.example.backend.DocxLoadDebugMain -- Heading[33]: text='ВВЕДЕНИЕ', size=16.0, bold=false, alignment=LEFT
+23:45:58.512 [main] INFO com.example.backend.DocxLoadDebugMain -- Heading[52]: text='ЗАКЛЮЧЕНИЕ', size=16.0, bold=false, alignment=LEFT
+23:45:58.512 [main] INFO com.example.backend.DocxLoadDebugMain -- Heading[54]: text='ПРИЛОЖЕНИЕ А', size=16.0, bold=false, alignment=LEFT
+23:45:58.512 [main] INFO com.example.backend.DocxLoadDebugMain -- Heading[58]: text='ПРИЛОЖЕНИЕ Б', size=16.0, bold=false, alignment=LEFT
+23:45:58.513 [main] INFO com.example.backend.DocxLoadDebugMain -- Heading[62]: text='ПРИЛОЖЕНИЕ В', size=16.0, bold=false, alignment=LEFT
+23:45:58.515 [main] INFO com.example.backend.DocxLoadDebugMain -- Potential issues summary:
+23:45:58.515 [main] INFO com.example.backend.DocxLoadDebugMain -- Paragraphs with null fontName: 3
+23:45:58.515 [main] INFO com.example.backend.DocxLoadDebugMain -- Paragraphs with null fontSizePt: 3
+23:45:58.515 [main] INFO com.example.backend.DocxLoadDebugMain -- Paragraphs with empty text: 7
+23:45:58.515 [main] INFO com.example.backend.DocxLoadDebugMain -- Tables without caption: 2
+23:45:58.515 [main] INFO com.example.backend.DocxLoadDebugMain -- Figures without caption: 0

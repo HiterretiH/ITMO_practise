@@ -39,5 +39,14 @@ public class ParagraphInfo {
     private Double lineSpacing;
     private Double firstLineIndentCm;
     private Double leftIndentCm;
+    /** 1-based: страница, с которой начинается абзац (оценка по разрывам OOXML). */
     private Integer pageIndex;
+    /** 1-based: последняя страница, на которой заканчивается абзац (учёт {@code lastRenderedPageBreak} внутри абзаца). */
+    private Integer pageEndIndex;
+
+    /** Абзац внутри ячейки таблицы (не основной текст для ФТ-8/ФТ-9). */
+    private boolean inTable;
+
+    /** Содержит формулу Office Math (oMath) — исключается из ФТ-8/ФТ-9. */
+    private boolean containsFormula;
 }

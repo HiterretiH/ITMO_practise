@@ -10,7 +10,8 @@ description = 'backend'
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
+        // Совпадает с установленным JDK (Gradle ищет точное совпадение с languageVersion=21, если нет JDK 21).
+        languageVersion = JavaLanguageVersion.of(23)
     }
 }
 
@@ -45,4 +46,26 @@ dependencies {
 
 tasks.named('test') {
     useJUnitPlatform()
+}
+
+tasks.register('runDocxDebug', JavaExec) {
+    group = 'application'
+    description = 'DocxLoadDebugMain: по умолчанию test-input/test.docx. Лог UTF-8 в output/right.txt или output/wrong.txt (если в имени есть test2). Переопределить файл: -PdebugOutput=output/custom.txt. Отключить файл: -PdebugOutput=false. Пример: -PdocxFile=test-input/test2.docx'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.example.backend.DocxLoadDebugMain'
+    workingDir = layout.projectDirectory.asFile
+    def docxPath = project.findProperty('docxFile') ?: 'test-input/test.docx'
+    args docxPath
+    def debugOut = project.findProperty('debugOutput')
+    def jvm = [
+            '-Dfile.encoding=UTF-8',
+            '-Dstdout.encoding=UTF-8',
+            '-Dstderr.encoding=UTF-8',
+            '-Dsun.stdout.encoding=UTF-8',
+            '-Dsun.stderr.encoding=UTF-8'
+    ]
+    if (debugOut != null && debugOut.toString() != 'false') {
+        jvm.add("-Ddebug.output=${debugOut}")
+    }
+    jvmArgs jvm
 }

@@ -3,6 +3,7 @@ package com.example.backend.service;
 import com.example.backend.exception.ValidationException;
 import com.example.backend.model.domain.*;
 import com.example.backend.util.DocumentFileValidator;
+import com.example.backend.util.PageLocator;
 import org.apache.poi.ooxml.POIXMLTypeLoader;
 import org.apache.poi.hwpf.HWPFDocument;
 import org.apache.poi.hwpf.usermodel.Paragraph;
@@ -24,6 +25,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -75,11 +77,14 @@ public class DocxLoadService {
 
             int paraIndex = 0;
             int bodyIndex = 0;
+            int nextParagraphStartPage = 1;
             Iterator<IBodyElement> it = doc.getBodyElementsIterator();
             while (it.hasNext()) {
                 IBodyElement element = it.next();
                 if (element instanceof XWPFParagraph xp) {
-                    ParagraphInfo info = mapParagraph(xp, null);
+                    int startPage = nextParagraphStartPage;
+                    ParagraphInfo info = mapParagraph(xp, startPage, false);
+                    nextParagraphStartPage = PageLocator.nextParagraphStartAfter(xp, startPage);
                     paragraphs.add(info);
                     String paragraphText = sanitizeText(info.getText());
                     bodyParagraphs.add(new BodyParagraphMeta(bodyIndex, paraIndex, paragraphText, hasPictures(xp)));
@@ -93,26 +98,35 @@ public class DocxLoadService {
                     paraIndex++;
                 } else if (element instanceof XWPFTable table) {
                     String tableCaption = findNearbyTableCaption(bodyParagraphs, captions, paraIndex);
+                    int tablePage = nextParagraphStartPage;
                     tableInfos.add(TableInfo.builder()
                             .caption(tableCaption)
                             .paragraphIndex(paraIndex)
-                            .pageIndex(0)
+                            .pageIndex(tablePage)
                             .build());
                     for (XWPFTableRow row : table.getRows()) {
                         for (XWPFTableCell cell : row.getTableCells()) {
                             for (XWPFParagraph p : cell.getParagraphs()) {
-                                ParagraphInfo pi = mapParagraph(p, null);
+                                int startPage = nextParagraphStartPage;
+                                ParagraphInfo pi = mapParagraph(p, startPage, true);
+                                nextParagraphStartPage = PageLocator.nextParagraphStartAfter(p, startPage);
                                 paragraphs.add(pi);
                                 if (pi.getText() != null) fullText.append(pi.getText()).append(" ");
                                 paraIndex++;
                             }
                         }
                     }
+                } else if (element instanceof XWPFSDT sdt) {
+                    int[] idx = new int[] {paraIndex, nextParagraphStartPage};
+                    appendSdtContent(sdt, bodyIndex, paragraphs, bodyParagraphs, captions, fullText, tableInfos, idx);
+                    paraIndex = idx[0];
+                    nextParagraphStartPage = idx[1];
                 }
                 bodyIndex++;
             }
 
             populateFigureInfos(figureInfos, bodyParagraphs);
+            syncFigurePageIndices(figureInfos, paragraphs);
             linkCaptionsToTables(captions, tableInfos, bodyParagraphs);
             linkCaptionsToFigures(captions, figureInfos, bodyParagraphs);
 
@@ -134,8 +148,94 @@ public class DocxLoadService {
         }
     }
 
-    private ParagraphInfo mapParagraph(XWPFParagraph xp, Integer pageIndex) {
+    /**
+     * Оглавление Word часто помещают в {@code w:sdt} (элемент управления, галерея Table of Contents).
+     * Итератор тела документа отдаёт один {@link XWPFSDT}; без обхода вложенных абзацев строки оглавления
+     * не попадают в список {@link ParagraphInfo}.
+     * <p>
+     * В POI 5.2.5 у {@link XWPFSDTContent} нет публичного {@code getBodyElements()} — читаем поле
+     * {@code bodyElements}, которое заполняет тот же конструктор, что и при разборе XML.
+     */
+    @SuppressWarnings("unchecked")
+    private static List<Object> extractSdtBodyElements(XWPFSDT sdt) {
+        ISDTContent content = sdt.getContent();
+        if (!(content instanceof XWPFSDTContent sdtContent)) {
+            return List.of();
+        }
+        try {
+            Field f = XWPFSDTContent.class.getDeclaredField("bodyElements");
+            f.setAccessible(true);
+            Object raw = f.get(sdtContent);
+            if (raw instanceof List<?>) {
+                return (List<Object>) raw;
+            }
+        } catch (ReflectiveOperationException ignored) {
+            // другая версия POI или обфускация — оглавление из SDT недоступно
+        }
+        return List.of();
+    }
+
+    private void appendSdtContent(
+            XWPFSDT sdt,
+            int bodyIndexForBlock,
+            List<ParagraphInfo> paragraphs,
+            List<BodyParagraphMeta> bodyParagraphs,
+            List<CaptionCandidate> captions,
+            StringBuilder fullText,
+            List<TableInfo> tableInfos,
+            int[] idx
+    ) {
+        List<Object> items = extractSdtBodyElements(sdt);
+        if (items.isEmpty()) {
+            return;
+        }
+        for (Object o : items) {
+            if (o instanceof XWPFParagraph xp) {
+                int startPage = idx[1];
+                ParagraphInfo info = mapParagraph(xp, startPage, false);
+                idx[1] = PageLocator.nextParagraphStartAfter(xp, startPage);
+                paragraphs.add(info);
+                String paragraphText = sanitizeText(info.getText());
+                bodyParagraphs.add(new BodyParagraphMeta(bodyIndexForBlock, idx[0], paragraphText, hasPictures(xp)));
+                CaptionType captionType = detectCaptionType(paragraphText);
+                if (captionType != null) {
+                    captions.add(new CaptionCandidate(captionType, paragraphText, bodyIndexForBlock, idx[0]));
+                }
+                if (info.getText() != null && !info.getText().isBlank()) {
+                    fullText.append(info.getText()).append("\n");
+                }
+                idx[0]++;
+            } else if (o instanceof XWPFTable table) {
+                String tableCaption = findNearbyTableCaption(bodyParagraphs, captions, idx[0]);
+                int tablePage = idx[1];
+                tableInfos.add(TableInfo.builder()
+                        .caption(tableCaption)
+                        .paragraphIndex(idx[0])
+                        .pageIndex(tablePage)
+                        .build());
+                for (XWPFTableRow row : table.getRows()) {
+                    for (XWPFTableCell cell : row.getTableCells()) {
+                        for (XWPFParagraph p : cell.getParagraphs()) {
+                            int startPage = idx[1];
+                            ParagraphInfo pi = mapParagraph(p, startPage, true);
+                            idx[1] = PageLocator.nextParagraphStartAfter(p, startPage);
+                            paragraphs.add(pi);
+                            if (pi.getText() != null) {
+                                fullText.append(pi.getText()).append(" ");
+                            }
+                            idx[0]++;
+                        }
+                    }
+                }
+            } else if (o instanceof XWPFSDT nested) {
+                appendSdtContent(nested, bodyIndexForBlock, paragraphs, bodyParagraphs, captions, fullText, tableInfos, idx);
+            }
+        }
+    }
+
+    private ParagraphInfo mapParagraph(XWPFParagraph xp, Integer pageIndex, boolean inTable) {
         String text = xp.getText();
+        boolean hasFormula = paragraphContainsOfficeMath(xp);
         ParagraphStyleSnapshot style = new ParagraphStyleSnapshot();
 
         if (xp.getAlignment() != null) {
@@ -211,6 +311,11 @@ public class DocxLoadService {
         }
         Integer outlineLevel = resolveParagraphOutlineLevel(xp);
 
+        Integer pageEnd = null;
+        if (pageIndex != null) {
+            pageEnd = PageLocator.paragraphEndPage(xp, pageIndex);
+        }
+
         return ParagraphInfo.builder()
                 .text(text)
                 .styleId(paragraphStyleId)
@@ -228,7 +333,28 @@ public class DocxLoadService {
                 .firstLineIndentCm(style.firstLineIndentCm)
                 .leftIndentCm(style.leftIndentCm)
                 .pageIndex(pageIndex)
+                .pageEndIndex(pageEnd)
+                .inTable(inTable)
+                .containsFormula(hasFormula)
                 .build();
+    }
+
+    /** Формулы Word: Office Math ({@code m:oMath}). */
+    private static boolean paragraphContainsOfficeMath(XWPFParagraph xp) {
+        String xml = xp.getCTP().xmlText();
+        return xml != null && (xml.contains("m:oMath") || xml.contains("oMathPara"));
+    }
+
+    private static void syncFigurePageIndices(List<FigureInfo> figures, List<ParagraphInfo> paragraphs) {
+        for (FigureInfo f : figures) {
+            int idx = f.getParagraphIndex();
+            if (idx >= 0 && idx < paragraphs.size()) {
+                ParagraphInfo pi = paragraphs.get(idx);
+                if (pi.getPageIndex() != null) {
+                    f.setPageIndex(pi.getPageIndex());
+                }
+            }
+        }
     }
 
     private void applyStyleFallbacks(XWPFParagraph paragraph, ParagraphStyleSnapshot out) {

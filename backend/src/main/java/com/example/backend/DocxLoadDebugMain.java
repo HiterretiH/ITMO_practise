@@ -1,5 +1,11 @@
 package com.example.backend;
 
+import com.example.backend.check.Ft4RequiredSectionsChecker;
+import com.example.backend.check.Ft5SectionNumberingChecker;
+import com.example.backend.check.Ft6SectionStartChecker;
+import com.example.backend.check.Ft7TocChecker;
+import com.example.backend.check.Ft8MainFontChecker;
+import com.example.backend.check.Ft9MainParagraphChecker;
 import com.example.backend.model.domain.DocumentPageSettings;
 import com.example.backend.model.domain.DocumentStructure;
 import com.example.backend.model.domain.FigureInfo;
@@ -10,18 +16,22 @@ import com.example.backend.model.domain.SectionPageInfo;
 import com.example.backend.model.domain.StyleDefinition;
 import com.example.backend.model.domain.TableInfo;
 import com.example.backend.service.DocxLoadService;
+import ch.qos.logback.classic.LoggerContext;
+import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.FileAppender;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.ILoggerFactory;
 
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class DocxLoadDebugMain {
@@ -29,7 +39,12 @@ public class DocxLoadDebugMain {
     private static final Logger log = LoggerFactory.getLogger(DocxLoadDebugMain.class);
 
     public static void main(String[] args) throws Exception {
-        Path file = resolveDocPath();
+        Path file = resolveDocPath(args);
+        Path debugLogFile = resolveDebugLogFilePath(args, file);
+        if (debugLogFile != null) {
+            installUtf8FileLogAppender(debugLogFile);
+        }
+
         String filename = file.getFileName().toString();
         String contentType = Files.probeContentType(file);
 
@@ -39,6 +54,9 @@ public class DocxLoadDebugMain {
             structure = service.load(filename, contentType, is);
         }
 
+        if (debugLogFile != null) {
+            log.info("Debug log (UTF-8): {}", debugLogFile.toAbsolutePath());
+        }
         log.info("File: {}", file.toAbsolutePath());
         log.info("Format: {}", structure.getFormat());
         log.info("Full text length: {}", structure.getFullText() == null ? 0 : structure.getFullText().length());
@@ -89,16 +107,12 @@ public class DocxLoadDebugMain {
         }
 
         List<StyleDefinition> styleDefs = structure.getStyleDefinitions();
-        log.info("Style definitions (styles.xml): {}", styleDefs == null ? 0 : styleDefs.size());
+        log.info("Style definitions (styles.xml), full list: {}", styleDefs == null ? 0 : styleDefs.size());
         if (styleDefs != null) {
-            int limit = Math.min(styleDefs.size(), 20);
-            for (int i = 0; i < limit; i++) {
+            for (int i = 0; i < styleDefs.size(); i++) {
                 StyleDefinition sd = styleDefs.get(i);
                 log.info("  Style[{}]: id='{}', name='{}', type={}, basedOn='{}', outlineLvl={}",
                         i, sd.getStyleId(), sd.getName(), sd.getStyleType(), sd.getBasedOnStyleId(), sd.getOutlineLevel());
-            }
-            if (styleDefs.size() > limit) {
-                log.info("  ... and {} more", styleDefs.size() - limit);
             }
         }
 
@@ -123,13 +137,17 @@ public class DocxLoadDebugMain {
         for (int i = 0; i < paragraphs.size(); i++) {
             ParagraphInfo p = paragraphs.get(i);
             log.info(
-                    "Paragraph[{}]: styleId='{}', styleName='{}', outlineLvl={}, caps={}, smallCaps={}, text='{}', fontName='{}', fontSizePt={}, bold={}, italic={}, colorHex='{}', alignment='{}', lineSpacing={}, firstLineIndentCm={}, leftIndentCm={}, pageIndex={}",
+                    "Paragraph[{}]: pages={}-{}, styleId='{}', styleName='{}', outlineLvl={}, caps={}, smallCaps={}, inTable={}, formula={}, text='{}', fontName='{}', fontSizePt={}, bold={}, italic={}, colorHex='{}', alignment='{}', lineSpacing={}, firstLineIndentCm={}, leftIndentCm={}",
                     i,
+                    p.getPageIndex(),
+                    p.getPageEndIndex(),
                     p.getStyleId(),
                     p.getStyleName(),
                     p.getOutlineLevel(),
                     p.getCaps(),
                     p.getSmallCaps(),
+                    p.isInTable(),
+                    p.isContainsFormula(),
                     p.getText(),
                     p.getFontName(),
                     p.getFontSizePt(),
@@ -139,9 +157,47 @@ public class DocxLoadDebugMain {
                     p.getAlignment(),
                     p.getLineSpacing(),
                     p.getFirstLineIndentCm(),
-                    p.getLeftIndentCm(),
-                    p.getPageIndex()
+                    p.getLeftIndentCm()
             );
+        }
+
+        List<String> ft4 = Ft4RequiredSectionsChecker.check(paragraphs);
+        log.info("ФТ-4 (обязательные разделы, прописные заголовки), замечаний: {}", ft4.size());
+        for (String line : ft4) {
+            log.info("  {}", line);
+        }
+
+        List<String> ft5 = Ft5SectionNumberingChecker.check(paragraphs);
+        log.info("ФТ-5 (нумерация глав и подразделов), замечаний: {}", ft5.size());
+        for (String line : ft5) {
+            log.info("  {}", line);
+        }
+
+        List<String> ft6 = Ft6SectionStartChecker.check(paragraphs);
+        log.info("ФТ-6 (начало с новой страницы), найдено замечаний: {}", ft6.size());
+        for (String line : ft6) {
+            log.info("  {}", line);
+        }
+        if (ft6.isEmpty()) {
+            log.info("  (замечаний по выбранным заголовкам нет — см. ограничения оценки страниц в PageLocator)");
+        }
+
+        List<String> ft7 = Ft7TocChecker.check(paragraphs);
+        log.info("ФТ-7 (содержание: стили TOC, отточия, страницы, соответствие заголовкам), сообщений: {}", ft7.size());
+        for (String line : ft7) {
+            log.info("  {}", line);
+        }
+
+        List<String> ft8 = Ft8MainFontChecker.check(paragraphs);
+        log.info("ФТ-8 (основной текст: шрифт Times New Roman, 12–14 pt, чёрный), замечаний: {}", ft8.size());
+        for (String line : ft8) {
+            log.info("  {}", line);
+        }
+
+        List<String> ft9 = Ft9MainParagraphChecker.check(paragraphs);
+        log.info("ФТ-9 (основной текст: интервал 1,5; отступ 1,25 см; по ширине), замечаний: {}", ft9.size());
+        for (String line : ft9) {
+            log.info("  {}", line);
         }
 
         printParagraphStats(paragraphs);
@@ -149,14 +205,78 @@ public class DocxLoadDebugMain {
         printPotentialIssues(paragraphs, tables, figures);
     }
 
-    private static Path resolveDocPath() {
+    /**
+     * Куда писать полный лог прогона: системное свойство {@code debug.output}, иначе второй аргумент,
+     * иначе {@code output/right.txt} для «эталонных» входов и {@code output/wrong.txt}, если в имени файла есть {@code test2}.
+     * Отключить: {@code -Ddebug.output=-} или {@code -Ddebug.output=false}.
+     */
+    private static Path resolveDebugLogFilePath(String[] args, Path docFile) {
+        String prop = System.getProperty("debug.output");
+        if ("-".equals(prop) || "false".equalsIgnoreCase(prop)) {
+            return null;
+        }
+        if (prop != null && !prop.isBlank()) {
+            return Path.of(prop.trim()).toAbsolutePath().normalize();
+        }
+        if (args != null && args.length > 1 && args[1] != null && !args[1].isBlank()) {
+            return Path.of(args[1].trim()).toAbsolutePath().normalize();
+        }
+        String name = docFile.getFileName().toString().toLowerCase(Locale.ROOT);
+        Path rel = name.contains("test2") ? Path.of("output", "wrong.txt") : Path.of("output", "right.txt");
+        return rel.toAbsolutePath().normalize();
+    }
+
+    /** Дублирование лога в файл в UTF-8 (консоль Gradle тоже с jvmArgs UTF-8 в build.gradle). */
+    private static void installUtf8FileLogAppender(Path logFile) throws Exception {
+        Files.createDirectories(logFile.getParent() != null ? logFile.getParent() : Path.of("."));
+        ILoggerFactory factory = LoggerFactory.getILoggerFactory();
+        if (!(factory instanceof LoggerContext)) {
+            return;
+        }
+        LoggerContext lc = (LoggerContext) factory;
+        ch.qos.logback.classic.Logger root = lc.getLogger(ch.qos.logback.classic.Logger.ROOT_LOGGER_NAME);
+        FileAppender<ILoggingEvent> fa = new FileAppender<>();
+        fa.setName("DOCX_DEBUG_UTF8");
+        fa.setContext(lc);
+        fa.setFile(logFile.toString());
+        fa.setAppend(false);
+        PatternLayoutEncoder enc = new PatternLayoutEncoder();
+        enc.setContext(lc);
+        enc.setPattern("%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n");
+        enc.setCharset(StandardCharsets.UTF_8);
+        enc.start();
+        fa.setEncoder(enc);
+        fa.start();
+        root.addAppender(fa);
+    }
+
+    /**
+     * Путь к .docx: первый аргумент командной строки (например {@code test-input/test2.docx}),
+     * иначе по умолчанию {@code test-input/test.docx}.
+     */
+    private static Path resolveDocPath(String[] args) {
+        if (args != null && args.length > 0 && args[0] != null && !args[0].isBlank()) {
+            return resolveExistingPath(args[0].trim());
+        }
         Path fromModule = Path.of("test-input", "test.docx");
         if (Files.exists(fromModule)) return fromModule;
 
         Path fromRoot = Path.of("backend", "test-input", "test.docx");
         if (Files.exists(fromRoot)) return fromRoot;
 
-        throw new IllegalStateException("Cannot find test-input/test.docx");
+        throw new IllegalStateException("Cannot find test-input/test.docx (передайте путь к файлу первым аргументом)");
+    }
+
+    private static Path resolveExistingPath(String first) {
+        Path p = Path.of(first);
+        if (Files.exists(p)) {
+            return p.toAbsolutePath().normalize();
+        }
+        Path underBackend = Path.of("backend", first);
+        if (Files.exists(underBackend)) {
+            return underBackend.toAbsolutePath().normalize();
+        }
+        throw new IllegalStateException("Файл не найден: " + first + " (cwd должен быть каталогом backend или укажите абсолютный путь)");
     }
 
     private static void printParagraphStats(List<ParagraphInfo> paragraphs) {
