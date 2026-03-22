@@ -17,6 +17,14 @@ public class DocumentStructure {
     /** Поля, секции, размер страницы, нумерация (ФТ-3, ФТ-10, ФТ-12). */
     private DocumentPageSettings pageSettings;
 
+    /**
+     * Индексы абзацев (в общем списке {@link #paragraphs}), у которых в {@code w:pPr} задан {@code w:sectPr},
+     * в порядке обхода тела документа; последняя секция может задаваться только {@code w:body/w:sectPr}.
+     * Нужно для ФТ-10 (оценка диапазона страниц по секциям).
+     */
+    @Builder.Default
+    private List<Integer> sectPrParagraphIndices = new ArrayList<>();
+
     @Builder.Default
     private List<TableInfo> tables = new ArrayList<>();
 

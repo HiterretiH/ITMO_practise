@@ -6,6 +6,7 @@ import com.example.backend.check.Ft6SectionStartChecker;
 import com.example.backend.check.Ft7TocChecker;
 import com.example.backend.check.Ft8MainFontChecker;
 import com.example.backend.check.Ft9MainParagraphChecker;
+import com.example.backend.check.Ft10PageMarginsChecker;
 import com.example.backend.model.domain.DocumentPageSettings;
 import com.example.backend.model.domain.DocumentStructure;
 import com.example.backend.model.domain.FigureInfo;
@@ -137,7 +138,7 @@ public class DocxLoadDebugMain {
         for (int i = 0; i < paragraphs.size(); i++) {
             ParagraphInfo p = paragraphs.get(i);
             log.info(
-                    "Paragraph[{}]: pages={}-{}, styleId='{}', styleName='{}', outlineLvl={}, caps={}, smallCaps={}, inTable={}, formula={}, text='{}', fontName='{}', fontSizePt={}, bold={}, italic={}, colorHex='{}', alignment='{}', lineSpacing={}, firstLineIndentCm={}, leftIndentCm={}",
+                    "Paragraph[{}]: pages={}-{}, styleId='{}', styleName='{}', outlineLvl={}, caps={}, smallCaps={}, inTable={}, formula={}, runTnrViol={}, runSzViol={}, runColViol={}, text='{}', fontName='{}', fontSizePt={}, bold={}, italic={}, colorHex='{}', alignment='{}', lineSpacing={}, firstLineIndentCm={}, leftIndentCm={}",
                     i,
                     p.getPageIndex(),
                     p.getPageEndIndex(),
@@ -148,6 +149,9 @@ public class DocxLoadDebugMain {
                     p.getSmallCaps(),
                     p.isInTable(),
                     p.isContainsFormula(),
+                    p.isRunFontViolatesTnr(),
+                    p.isRunFontSizeViolates(),
+                    p.isRunColorViolatesBlack(),
                     p.getText(),
                     p.getFontName(),
                     p.getFontSizePt(),
@@ -197,6 +201,16 @@ public class DocxLoadDebugMain {
         List<String> ft9 = Ft9MainParagraphChecker.check(paragraphs);
         log.info("ФТ-9 (основной текст: интервал 1,5; отступ 1,25 см; по ширине), замечаний: {}", ft9.size());
         for (String line : ft9) {
+            log.info("  {}", line);
+        }
+
+        List<String> ft10 = Ft10PageMarginsChecker.check(
+                pageSettings,
+                margins,
+                paragraphs,
+                structure.getSectPrParagraphIndices());
+        log.info("ФТ-10 (поля страницы: левое 30 мм; правое 10–15 мм; верх/низ по 20 мм, п. 4.2), замечаний: {}", ft10.size());
+        for (String line : ft10) {
             log.info("  {}", line);
         }
 

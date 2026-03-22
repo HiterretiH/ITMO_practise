@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Locale;
 
 /**
- * ФТ-9: межстрочный интервал 1,5; абзацный отступ 1,25 см; выравнивание по ширине (п. 4.2).
+ * ФТ-9: междустрочный интервал 1,5; абзацный отступ 1,25 см; выравнивание по ширине (п. 4.2).
  * Только абзацы основного текста, см. {@link BodyParagraphRules}. Если параметр в документе не задан
  * явно (null), проверка по нему пропускается, чтобы не плодить ложные срабатывания.
  */
@@ -33,29 +33,71 @@ public final class Ft9MainParagraphChecker {
                 break;
             }
             String loc = formatLocation(p, i);
+            String preview = Ft8MainFontChecker.paragraphTextPreview(p);
 
             Double line = p.getLineSpacing();
             if (line != null && Math.abs(line - LINE_EXPECTED) > LINE_EPS) {
+                if (issues.size() >= MAX_ISSUES) {
+                    break;
+                }
                 issues.add(String.format(Locale.ROOT,
-                        "ФТ-9: %s межстрочный интервал должен быть 1,5 (п. 4.2), фактически %.2f.",
-                        loc, line));
+                        "ФТ-9: %s межстрочный интервал (п. 4.2) — ожидается 1,5; фактически %.2f (%s).%s",
+                        loc, line, describeSpacingVersusNorm(line), preview));
             }
 
+            if (issues.size() >= MAX_ISSUES) {
+                break;
+            }
             Double fi = p.getFirstLineIndentCm();
             if (fi != null && Math.abs(fi - INDENT_CM_EXPECTED) > INDENT_CM_EPS) {
+                if (issues.size() >= MAX_ISSUES) {
+                    break;
+                }
+                double delta = fi - INDENT_CM_EXPECTED;
                 issues.add(String.format(Locale.ROOT,
-                        "ФТ-9: %s абзацный отступ должен быть 1,25 см (п. 4.2), фактически %.2f см.",
-                        loc, fi));
+                        "ФТ-9: %s красная строка / абзацный отступ (п. 4.2) — ожидается 1,25 см; фактически %.2f см (отклонение %+0.2f см).%s",
+                        loc, fi, delta, preview));
             }
 
+            if (issues.size() >= MAX_ISSUES) {
+                break;
+            }
             String al = p.getAlignment();
             if (al != null && !isJustified(al)) {
+                if (issues.size() >= MAX_ISSUES) {
+                    break;
+                }
                 issues.add(String.format(Locale.ROOT,
-                        "ФТ-9: %s выравнивание основного текста — по ширине (п. 4.2), фактически «%s».",
-                        loc, al));
+                        "ФТ-9: %s выравнивание по горизонтали (п. 4.2) — ожидается по ширине; фактически %s (код OOXML: «%s»).%s",
+                        loc, alignmentHumanRu(al), al, preview));
             }
         }
         return issues;
+    }
+
+    private static String describeSpacingVersusNorm(double line) {
+        if (line < LINE_EXPECTED - LINE_EPS) {
+            return "интервал меньше требуемого 1,5";
+        }
+        if (line > LINE_EXPECTED + LINE_EPS) {
+            return "интервал больше требуемого 1,5";
+        }
+        return "отличается от 1,5";
+    }
+
+    private static String alignmentHumanRu(String alignment) {
+        if (alignment == null) {
+            return "не задано";
+        }
+        String u = alignment.trim().toUpperCase(Locale.ROOT);
+        return switch (u) {
+            case "LEFT" -> "по левому краю";
+            case "RIGHT" -> "по правому краю";
+            case "CENTER" -> "по центру";
+            case "BOTH", "JUSTIFY" -> "по ширине";
+            case "DISTRIBUTE" -> "по ширине с распределением";
+            default -> "иное («" + alignment + "»)";
+        };
     }
 
     /** В Word для «по ширине» в OOXML часто {@code BOTH}. */
@@ -70,8 +112,8 @@ public final class Ft9MainParagraphChecker {
     private static String formatLocation(ParagraphInfo p, int index) {
         Integer pg = p.getPageIndex();
         if (pg != null) {
-            return String.format(Locale.ROOT, "стр. %d, абз. #%d:", pg, index);
+            return String.format(Locale.ROOT, "стр. %d, абз. #%d —", pg, index);
         }
-        return String.format(Locale.ROOT, "абз. #%d:", index);
+        return String.format(Locale.ROOT, "абз. #%d —", index);
     }
 }

@@ -1,5 +1,6 @@
 package com.example.backend.service;
 
+import com.example.backend.check.Ft8MainFontChecker;
 import com.example.backend.exception.ValidationException;
 import com.example.backend.model.domain.*;
 import com.example.backend.util.DocumentFileValidator;
@@ -38,6 +39,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.regex.Pattern;
 
 @Service
@@ -74,6 +76,8 @@ public class DocxLoadService {
             StringBuilder fullText = new StringBuilder();
             List<BodyParagraphMeta> bodyParagraphs = new ArrayList<>();
             List<CaptionCandidate> captions = new ArrayList<>();
+            List<CTSectPr> collectedSectPrs = new ArrayList<>();
+            List<Integer> sectPrParagraphIndices = new ArrayList<>();
 
             int paraIndex = 0;
             int bodyIndex = 0;
@@ -86,6 +90,10 @@ public class DocxLoadService {
                     ParagraphInfo info = mapParagraph(xp, startPage, false);
                     nextParagraphStartPage = PageLocator.nextParagraphStartAfter(xp, startPage);
                     paragraphs.add(info);
+                    if (xp.getCTP().getPPr() != null && xp.getCTP().getPPr().isSetSectPr()) {
+                        collectedSectPrs.add(xp.getCTP().getPPr().getSectPr());
+                        sectPrParagraphIndices.add(paraIndex);
+                    }
                     String paragraphText = sanitizeText(info.getText());
                     bodyParagraphs.add(new BodyParagraphMeta(bodyIndex, paraIndex, paragraphText, hasPictures(xp)));
                     CaptionType captionType = detectCaptionType(paragraphText);
@@ -111,6 +119,10 @@ public class DocxLoadService {
                                 ParagraphInfo pi = mapParagraph(p, startPage, true);
                                 nextParagraphStartPage = PageLocator.nextParagraphStartAfter(p, startPage);
                                 paragraphs.add(pi);
+                                if (p.getCTP().getPPr() != null && p.getCTP().getPPr().isSetSectPr()) {
+                                    collectedSectPrs.add(p.getCTP().getPPr().getSectPr());
+                                    sectPrParagraphIndices.add(paraIndex);
+                                }
                                 if (pi.getText() != null) fullText.append(pi.getText()).append(" ");
                                 paraIndex++;
                             }
@@ -118,7 +130,8 @@ public class DocxLoadService {
                     }
                 } else if (element instanceof XWPFSDT sdt) {
                     int[] idx = new int[] {paraIndex, nextParagraphStartPage};
-                    appendSdtContent(sdt, bodyIndex, paragraphs, bodyParagraphs, captions, fullText, tableInfos, idx);
+                    appendSdtContent(sdt, bodyIndex, paragraphs, bodyParagraphs, captions, fullText, tableInfos, idx,
+                            collectedSectPrs, sectPrParagraphIndices);
                     paraIndex = idx[0];
                     nextParagraphStartPage = idx[1];
                 }
@@ -130,13 +143,18 @@ public class DocxLoadService {
             linkCaptionsToTables(captions, tableInfos, bodyParagraphs);
             linkCaptionsToFigures(captions, figureInfos, bodyParagraphs);
 
+            if (doc.getDocument().getBody().isSetSectPr()) {
+                collectedSectPrs.add(doc.getDocument().getBody().getSectPr());
+            }
+
             PageMargins margins = extractMargins(doc);
-            DocumentPageSettings pageSettings = extractDocumentPageSettings(doc);
+            DocumentPageSettings pageSettings = extractDocumentPageSettings(doc, collectedSectPrs);
             List<StyleDefinition> styleDefinitions = extractStyleDefinitions(doc);
             return DocumentStructure.builder()
                     .paragraphs(paragraphs)
                     .margins(margins)
                     .pageSettings(pageSettings)
+                    .sectPrParagraphIndices(sectPrParagraphIndices)
                     .styleDefinitions(styleDefinitions)
                     .tables(tableInfos)
                     .figures(figureInfos)
@@ -183,7 +201,9 @@ public class DocxLoadService {
             List<CaptionCandidate> captions,
             StringBuilder fullText,
             List<TableInfo> tableInfos,
-            int[] idx
+            int[] idx,
+            List<CTSectPr> collectedSectPrs,
+            List<Integer> sectPrParagraphIndices
     ) {
         List<Object> items = extractSdtBodyElements(sdt);
         if (items.isEmpty()) {
@@ -195,6 +215,10 @@ public class DocxLoadService {
                 ParagraphInfo info = mapParagraph(xp, startPage, false);
                 idx[1] = PageLocator.nextParagraphStartAfter(xp, startPage);
                 paragraphs.add(info);
+                if (xp.getCTP().getPPr() != null && xp.getCTP().getPPr().isSetSectPr()) {
+                    collectedSectPrs.add(xp.getCTP().getPPr().getSectPr());
+                    sectPrParagraphIndices.add(idx[0]);
+                }
                 String paragraphText = sanitizeText(info.getText());
                 bodyParagraphs.add(new BodyParagraphMeta(bodyIndexForBlock, idx[0], paragraphText, hasPictures(xp)));
                 CaptionType captionType = detectCaptionType(paragraphText);
@@ -220,6 +244,10 @@ public class DocxLoadService {
                             ParagraphInfo pi = mapParagraph(p, startPage, true);
                             idx[1] = PageLocator.nextParagraphStartAfter(p, startPage);
                             paragraphs.add(pi);
+                            if (p.getCTP().getPPr() != null && p.getCTP().getPPr().isSetSectPr()) {
+                                collectedSectPrs.add(p.getCTP().getPPr().getSectPr());
+                                sectPrParagraphIndices.add(idx[0]);
+                            }
                             if (pi.getText() != null) {
                                 fullText.append(pi.getText()).append(" ");
                             }
@@ -228,7 +256,8 @@ public class DocxLoadService {
                     }
                 }
             } else if (o instanceof XWPFSDT nested) {
-                appendSdtContent(nested, bodyIndexForBlock, paragraphs, bodyParagraphs, captions, fullText, tableInfos, idx);
+                appendSdtContent(nested, bodyIndexForBlock, paragraphs, bodyParagraphs, captions, fullText, tableInfos, idx,
+                        collectedSectPrs, sectPrParagraphIndices);
             }
         }
     }
@@ -300,6 +329,43 @@ public class DocxLoadService {
         applyStyleFallbacks(xp, style);
         normalizeStyleValues(style, text);
 
+        boolean runFontViolatesTnr = false;
+        boolean runFontSizeViolates = false;
+        boolean runColorViolatesBlack = false;
+        LinkedHashSet<String> badFonts = new LinkedHashSet<>();
+        LinkedHashSet<String> badSizes = new LinkedHashSet<>();
+        LinkedHashSet<String> badColors = new LinkedHashSet<>();
+        for (XWPFRun run : xp.getRuns()) {
+            String rt = run.getText(0);
+            if (rt == null || rt.isEmpty()) {
+                continue;
+            }
+            String effFont = firstNonBlank(
+                    safeFontName(run),
+                    parseRFontsAsciiFromRPr(run),
+                    style.fontName
+            );
+            Double effSize = pickFirstNonNull(safeFontSize(run), parseSzFromRPr(run), style.fontSizePt);
+            String effColor = firstNonBlank(safeColor(run), style.colorHex);
+
+            if (effFont != null && !Ft8MainFontChecker.isTimesNewRoman(effFont)) {
+                runFontViolatesTnr = true;
+                badFonts.add(effFont.trim());
+            }
+            if (effSize != null) {
+                if (effSize + 0.05 < 12.0 || effSize > 14.0 + 0.05) {
+                    runFontSizeViolates = true;
+                    badSizes.add(String.format(Locale.ROOT, "%.2f pt", effSize));
+                }
+            }
+            if (!Ft8MainFontChecker.isBlackColor(effColor)) {
+                runColorViolatesBlack = true;
+                if (effColor != null && !effColor.isBlank()) {
+                    badColors.add("#" + effColor.replace("#", "").toUpperCase(Locale.ROOT));
+                }
+            }
+        }
+
         String paragraphStyleId = xp.getStyleID();
         String paragraphStyleName = null;
         if (paragraphStyleId != null && !paragraphStyleId.isBlank()
@@ -336,7 +402,78 @@ public class DocxLoadService {
                 .pageEndIndex(pageEnd)
                 .inTable(inTable)
                 .containsFormula(hasFormula)
+                .runFontViolatesTnr(runFontViolatesTnr)
+                .runFontSizeViolates(runFontSizeViolates)
+                .runColorViolatesBlack(runColorViolatesBlack)
+                .ft8NonTnrFontsFound(joinLimited(badFonts, 5))
+                .ft8NonCompliantSizesFound(joinLimited(badSizes, 5))
+                .ft8NonBlackColorsFound(joinLimited(badColors, 5))
                 .build();
+    }
+
+    private static String joinLimited(Set<String> values, int max) {
+        if (values == null || values.isEmpty()) {
+            return null;
+        }
+        return values.stream().limit(max).collect(Collectors.joining(", "));
+    }
+
+    private static String firstNonBlank(String... parts) {
+        if (parts == null) {
+            return null;
+        }
+        for (String p : parts) {
+            if (p != null && !p.isBlank()) {
+                return p;
+            }
+        }
+        return null;
+    }
+
+    private static Double pickFirstNonNull(Double a, Double b, Double c) {
+        if (a != null) {
+            return a;
+        }
+        if (b != null) {
+            return b;
+        }
+        return c;
+    }
+
+    private static String parseRFontsAsciiFromRPr(XWPFRun run) {
+        if (run.getCTR().getRPr() == null) {
+            return null;
+        }
+        String xml = run.getCTR().getRPr().xmlText();
+        if (xml == null || xml.isEmpty()) {
+            return null;
+        }
+        String ascii = xmlAttrFromTag(xml, "rFonts", "ascii");
+        if (ascii != null && !ascii.isBlank()) {
+            return ascii.trim();
+        }
+        String hAnsi = xmlAttrFromTag(xml, "rFonts", "hAnsi");
+        if (hAnsi != null && !hAnsi.isBlank()) {
+            return hAnsi.trim();
+        }
+        return xmlAttrFromTag(xml, "rFonts", "cs");
+    }
+
+    private static Double parseSzFromRPr(XWPFRun run) {
+        if (run.getCTR().getRPr() == null) {
+            return null;
+        }
+        String xml = run.getCTR().getRPr().xmlText();
+        if (xml == null || xml.isEmpty()) {
+            return null;
+        }
+        String sz = xmlAttrFromTag(xml, "sz", "val");
+        Double pt = halfPointsToPt(sz);
+        if (pt != null) {
+            return pt;
+        }
+        String szCs = xmlAttrFromTag(xml, "szCs", "val");
+        return halfPointsToPt(szCs);
     }
 
     /** Формулы Word: Office Math ({@code m:oMath}). */
@@ -494,19 +631,9 @@ public class DocxLoadService {
     /**
      * Секции ({@code w:sectPr}), поля, размер листа, параметры {@code w:pgNumType}; нумерация в колонтитулах (ФТ-3, ФТ-12).
      */
-    private DocumentPageSettings extractDocumentPageSettings(XWPFDocument doc) {
-        List<CTSectPr> sectPrs = new ArrayList<>();
-        for (XWPFParagraph p : doc.getParagraphs()) {
-            if (p.getCTP().getPPr() != null && p.getCTP().getPPr().isSetSectPr()) {
-                sectPrs.add(p.getCTP().getPPr().getSectPr());
-            }
-        }
-        if (doc.getDocument().getBody().isSetSectPr()) {
-            sectPrs.add(doc.getDocument().getBody().getSectPr());
-        }
-
+    private DocumentPageSettings extractDocumentPageSettings(XWPFDocument doc, List<CTSectPr> sectPrs) {
         PageNumberingInfo numbering = analyzePageNumbering(doc);
-        if (sectPrs.isEmpty()) {
+        if (sectPrs == null || sectPrs.isEmpty()) {
             if (numbering != null) {
                 numbering.setPageNumberRestartInSections(false);
             }

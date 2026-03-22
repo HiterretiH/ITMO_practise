@@ -49,4 +49,24 @@ public class ParagraphInfo {
 
     /** Содержит формулу Office Math (oMath) — исключается из ФТ-8/ФТ-9. */
     private boolean containsFormula;
+
+    /**
+     * По прогонам ({@code w:r}): есть фрагмент с шрифтом не Times New Roman (в т.ч. прямое оформление поверх стиля).
+     */
+    private boolean runFontViolatesTnr;
+
+    /** По прогонам: размер вне диапазона 12–14 pt. */
+    private boolean runFontSizeViolates;
+
+    /** По прогонам: цвет не чёрный (в т.ч. локальный цвет в {@code w:color}). */
+    private boolean runColorViolatesBlack;
+
+    /** Для отчёта ФТ-8: какие шрифты встретились помимо TNR (через запятую, не более нескольких). */
+    private String ft8NonTnrFontsFound;
+
+    /** Для отчёта ФТ-8: какие размеры в pt вне 12–14. */
+    private String ft8NonCompliantSizesFound;
+
+    /** Для отчёта ФТ-8: какие цвета (hex) не чёрные. */
+    private String ft8NonBlackColorsFound;
 }
