@@ -1,10 +1,11 @@
+import { CommonModule } from '@angular/common';
 import { Component, Input } from '@angular/core';
 import { ProgressBarModule } from 'primeng/progressbar';
 
 @Component({
   selector: 'app-progress-indicator',
   standalone: true,
-  imports: [ProgressBarModule],
+  imports: [CommonModule, ProgressBarModule],
   templateUrl: './progress-indicator.component.html',
   styleUrl: './progress-indicator.component.css',
 })
