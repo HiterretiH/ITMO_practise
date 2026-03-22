@@ -3,6 +3,7 @@ package com.example.backend.service;
 import com.example.backend.exception.ValidationException;
 import com.example.backend.model.domain.*;
 import com.example.backend.util.DocumentFileValidator;
+import org.apache.poi.ooxml.POIXMLTypeLoader;
 import org.apache.poi.hwpf.HWPFDocument;
 import org.apache.poi.hwpf.usermodel.Paragraph;
 import org.apache.poi.hwpf.usermodel.Range;
@@ -12,7 +13,12 @@ import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTPageMar;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTPageNumber;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTPageSz;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTSectPr;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTStyles;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTStyle;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.StylesDocument;
+import org.apache.poi.openxml4j.opc.OPCPackage;
+import org.apache.poi.openxml4j.opc.PackagePart;
+import org.apache.poi.openxml4j.opc.PackagingURIHelper;
 import org.apache.xmlbeans.XmlObject;
 import org.springframework.stereotype.Service;
 
@@ -41,6 +47,9 @@ public class DocxLoadService {
     /** Поле номера страницы в OOXML ({@code w:instrText}). */
     private static final Pattern OOXML_PAGE_FIELD = Pattern.compile("(?i)<w:instrText[^>]*>\\s*PAGE\\s");
     private static final Pattern OOXML_NUMPAGES_FIELD = Pattern.compile("(?i)<w:instrText[^>]*>\\s*NUMPAGES\\s");
+    /** Элементы шрифта в {@code w:rPr} — разные версии XmlBeans дают разный API, поэтому смотрим XML. */
+    private static final Pattern OOXML_RPR_CAPS = Pattern.compile("<w:caps\\b", Pattern.CASE_INSENSITIVE);
+    private static final Pattern OOXML_RPR_SMALL_CAPS = Pattern.compile("<w:smallCaps\\b", Pattern.CASE_INSENSITIVE);
     /** Выравнивание по центру в {@code w:pPr} (для колонтитула с номером страницы). */
     private static final Pattern OOXML_JC_CENTER = Pattern.compile("<w:jc\\s[^>]*w:val=\"center\"", Pattern.CASE_INSENSITIVE);
     private static final int CAPTION_LINK_DISTANCE = 2;
@@ -109,10 +118,12 @@ public class DocxLoadService {
 
             PageMargins margins = extractMargins(doc);
             DocumentPageSettings pageSettings = extractDocumentPageSettings(doc);
+            List<StyleDefinition> styleDefinitions = extractStyleDefinitions(doc);
             return DocumentStructure.builder()
                     .paragraphs(paragraphs)
                     .margins(margins)
                     .pageSettings(pageSettings)
+                    .styleDefinitions(styleDefinitions)
                     .tables(tableInfos)
                     .figures(figureInfos)
                     .fullText(fullText.toString().trim())
@@ -149,6 +160,8 @@ public class DocxLoadService {
         Map<String, Integer> fontCounts = new HashMap<>();
         Map<Double, Integer> sizeCounts = new HashMap<>();
         Map<String, Integer> colorCounts = new HashMap<>();
+        boolean anyCaps = false;
+        boolean anySmallCaps = false;
         for (XWPFRun run : xp.getRuns()) {
             runCount++;
             String runFont = safeFontName(run);
@@ -162,6 +175,17 @@ public class DocxLoadService {
 
             anyBold = anyBold || run.isBold();
             anyItalic = anyItalic || run.isItalic();
+            if (run.getCTR().getRPr() != null) {
+                String rPrXml = run.getCTR().getRPr().xmlText();
+                if (rPrXml != null) {
+                    if (OOXML_RPR_CAPS.matcher(rPrXml).find()) {
+                        anyCaps = true;
+                    }
+                    if (OOXML_RPR_SMALL_CAPS.matcher(rPrXml).find()) {
+                        anySmallCaps = true;
+                    }
+                }
+            }
         }
         if (runCount > 0) {
             style.bold = anyBold;
@@ -169,13 +193,31 @@ public class DocxLoadService {
             style.fontName = mostFrequent(fontCounts);
             style.fontSizePt = mostFrequent(sizeCounts);
             style.colorHex = mostFrequent(colorCounts);
+            style.caps = anyCaps;
+            style.smallCaps = anySmallCaps;
         }
 
         applyStyleFallbacks(xp, style);
         normalizeStyleValues(style, text);
 
+        String paragraphStyleId = xp.getStyleID();
+        String paragraphStyleName = null;
+        if (paragraphStyleId != null && !paragraphStyleId.isBlank()
+                && xp.getDocument() != null && xp.getDocument().getStyles() != null) {
+            XWPFStyle st = xp.getDocument().getStyles().getStyle(paragraphStyleId);
+            if (st != null) {
+                paragraphStyleName = st.getName();
+            }
+        }
+        Integer outlineLevel = resolveParagraphOutlineLevel(xp);
+
         return ParagraphInfo.builder()
                 .text(text)
+                .styleId(paragraphStyleId)
+                .styleName(paragraphStyleName)
+                .outlineLevel(outlineLevel)
+                .caps(style.caps)
+                .smallCaps(style.smallCaps)
                 .fontName(style.fontName)
                 .fontSizePt(style.fontSizePt)
                 .bold(style.bold)
@@ -633,12 +675,23 @@ public class DocxLoadService {
         return best;
     }
 
+    /**
+     * Доступ к {@link CTStyles}: в POI 5.2.x — {@code getCtStyles()}, в новых — {@code getCTStyles()}.
+     */
     private static XmlObject resolveCtStyles(XWPFStyles styles) {
-        try {
-            var method = styles.getClass().getMethod("getCTStyles");
-            Object value = method.invoke(styles);
-            if (value instanceof XmlObject xml) return xml;
-        } catch (Exception ignored) {
+        if (styles == null) {
+            return null;
+        }
+        for (String methodName : new String[] {"getCtStyles", "getCTStyles"}) {
+            try {
+                var method = styles.getClass().getMethod(methodName);
+                Object value = method.invoke(styles);
+                if (value instanceof XmlObject xml) {
+                    return xml;
+                }
+            } catch (ReflectiveOperationException ignored) {
+                // try next
+            }
         }
         return null;
     }
@@ -895,5 +948,108 @@ public class DocxLoadService {
         private Double lineSpacing;
         private Double firstLineIndentCm;
         private Double leftIndentCm;
+        private Boolean caps;
+        private Boolean smallCaps;
+    }
+
+    /**
+     * Каталог стилей из styles.xml (ФТ-3: параметры стилей; ФТ-11: единообразие заголовков).
+     */
+    private static List<StyleDefinition> extractStyleDefinitions(XWPFDocument doc) {
+        XWPFStyles styles = doc.getStyles();
+        if (styles == null) {
+            return List.of();
+        }
+        CTStyles ctStyles = resolveCtStylesRoot(styles, doc);
+        if (ctStyles == null) {
+            return List.of();
+        }
+        List<StyleDefinition> out = new ArrayList<>();
+        for (CTStyle ct : ctStyles.getStyleArray()) {
+            if (ct == null) {
+                continue;
+            }
+            String id = ct.getStyleId();
+            if (id == null || id.isBlank()) {
+                continue;
+            }
+            String name = ct.isSetName() && ct.getName() != null ? ct.getName().getVal() : null;
+            String type = null;
+            if (ct.isSetType()) {
+                type = ct.getType().toString();
+            }
+            String basedOn = extractBasedOnStyleId(ct.xmlText());
+            Integer outline = null;
+            if (ct.isSetPPr() && ct.getPPr().isSetOutlineLvl()) {
+                outline = ct.getPPr().getOutlineLvl().getVal().intValue();
+            }
+            out.add(StyleDefinition.builder()
+                    .styleId(id)
+                    .name(name)
+                    .styleType(type)
+                    .basedOnStyleId(basedOn)
+                    .outlineLevel(outline)
+                    .build());
+        }
+        return out;
+    }
+
+    /**
+     * Корень {@code w:styles}: из {@link XWPFStyles}, повторный разбор XML или чтение {@code /word/styles.xml}.
+     */
+    private static CTStyles resolveCtStylesRoot(XWPFStyles styles, XWPFDocument doc) {
+        XmlObject xo = resolveCtStyles(styles);
+        if (xo instanceof CTStyles cs) {
+            return cs;
+        }
+        // Иногда XmlBeans отдаёт тип, с которым не срабатывает instanceof CTStyles — читаем part напрямую.
+        return loadCtStylesFromPackage(doc);
+    }
+
+    private static CTStyles loadCtStylesFromPackage(XWPFDocument doc) {
+        try {
+            OPCPackage pkg = doc.getPackage();
+            PackagePart part = pkg.getPart(PackagingURIHelper.createPartName("/word/styles.xml"));
+            try (InputStream is = part.getInputStream()) {
+                StylesDocument sd = StylesDocument.Factory.parse(is, POIXMLTypeLoader.DEFAULT_XML_OPTIONS);
+                return sd.getStyles();
+            }
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    /**
+     * Уровень структуры абзаца: сначала {@code w:outlineLvl} в абзаце, иначе цепочка {@code w:basedOn}.
+     */
+    private static Integer resolveParagraphOutlineLevel(XWPFParagraph xp) {
+        if (xp.getCTP().getPPr() != null && xp.getCTP().getPPr().isSetOutlineLvl()) {
+            return xp.getCTP().getPPr().getOutlineLvl().getVal().intValue();
+        }
+        String sid = xp.getStyleID();
+        if (sid == null || sid.isBlank() || xp.getDocument() == null || xp.getDocument().getStyles() == null) {
+            return null;
+        }
+        return resolveOutlineLevelFromStyleChain(xp.getDocument().getStyles(), sid, new HashSet<>());
+    }
+
+    private static Integer resolveOutlineLevelFromStyleChain(XWPFStyles styles, String styleId, Set<String> visited) {
+        if (styleId == null || visited.contains(styleId)) {
+            return null;
+        }
+        visited.add(styleId);
+        XWPFStyle style = styles.getStyle(styleId);
+        if (style == null || style.getCTStyle() == null) {
+            return null;
+        }
+        CTStyle ct = style.getCTStyle();
+        if (ct.isSetPPr() && ct.getPPr().isSetOutlineLvl()) {
+            return ct.getPPr().getOutlineLvl().getVal().intValue();
+        }
+        String basedOn = extractBasedOnStyleId(ct.xmlText());
+        if (basedOn != null) {
+            return resolveOutlineLevelFromStyleChain(styles, basedOn, visited);
+        }
+        return null;
     }
 }

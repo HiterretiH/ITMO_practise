@@ -7,6 +7,29 @@ import lombok.Data;
 @Builder
 public class ParagraphInfo {
     private String text;
+
+    /** Идентификатор стиля абзаца Word ({@code w:pStyle}), например Heading1. */
+    private String styleId;
+
+    /** Локализованное имя стиля из styles.xml (если есть). */
+    private String styleName;
+
+    /**
+     * Уровень структуры (0 = заголовок 1-го уровня …). Нужен для ФТ-4–ФТ-6, ФТ-11.
+     * Берётся из {@code w:outlineLvl} абзаца или цепочки стилей.
+     */
+    private Integer outlineLevel;
+
+    /**
+     * Все прописные (caps) в оформлении шрифта — для вариантов заголовков ФТ-11.
+     */
+    private Boolean caps;
+
+    /**
+     * Малые прописные (smallCaps).
+     */
+    private Boolean smallCaps;
+
     private String fontName;
     private Double fontSizePt;
     private Boolean bold;

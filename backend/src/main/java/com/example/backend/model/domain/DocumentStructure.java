@@ -26,4 +26,8 @@ public class DocumentStructure {
     private String fullText;
 
     private String format;
+
+    /** Каталог стилей документа (styles.xml), для ФТ-8–ФТ-11 и единообразия заголовков. */
+    @Builder.Default
+    private List<StyleDefinition> styleDefinitions = new ArrayList<>();
 }

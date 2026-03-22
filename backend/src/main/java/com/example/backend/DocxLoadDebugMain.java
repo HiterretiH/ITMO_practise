@@ -7,6 +7,7 @@ import com.example.backend.model.domain.PageMargins;
 import com.example.backend.model.domain.PageNumberingInfo;
 import com.example.backend.model.domain.ParagraphInfo;
 import com.example.backend.model.domain.SectionPageInfo;
+import com.example.backend.model.domain.StyleDefinition;
 import com.example.backend.model.domain.TableInfo;
 import com.example.backend.service.DocxLoadService;
 import org.slf4j.Logger;
@@ -87,6 +88,20 @@ public class DocxLoadDebugMain {
             }
         }
 
+        List<StyleDefinition> styleDefs = structure.getStyleDefinitions();
+        log.info("Style definitions (styles.xml): {}", styleDefs == null ? 0 : styleDefs.size());
+        if (styleDefs != null) {
+            int limit = Math.min(styleDefs.size(), 20);
+            for (int i = 0; i < limit; i++) {
+                StyleDefinition sd = styleDefs.get(i);
+                log.info("  Style[{}]: id='{}', name='{}', type={}, basedOn='{}', outlineLvl={}",
+                        i, sd.getStyleId(), sd.getName(), sd.getStyleType(), sd.getBasedOnStyleId(), sd.getOutlineLevel());
+            }
+            if (styleDefs.size() > limit) {
+                log.info("  ... and {} more", styleDefs.size() - limit);
+            }
+        }
+
         List<TableInfo> tables = structure.getTables();
         log.info("Tables count: {}", tables.size());
         for (int i = 0; i < tables.size(); i++) {
@@ -108,8 +123,13 @@ public class DocxLoadDebugMain {
         for (int i = 0; i < paragraphs.size(); i++) {
             ParagraphInfo p = paragraphs.get(i);
             log.info(
-                    "Paragraph[{}]: text='{}', fontName='{}', fontSizePt={}, bold={}, italic={}, colorHex='{}', alignment='{}', lineSpacing={}, firstLineIndentCm={}, leftIndentCm={}, pageIndex={}",
+                    "Paragraph[{}]: styleId='{}', styleName='{}', outlineLvl={}, caps={}, smallCaps={}, text='{}', fontName='{}', fontSizePt={}, bold={}, italic={}, colorHex='{}', alignment='{}', lineSpacing={}, firstLineIndentCm={}, leftIndentCm={}, pageIndex={}",
                     i,
+                    p.getStyleId(),
+                    p.getStyleName(),
+                    p.getOutlineLevel(),
+                    p.getCaps(),
+                    p.getSmallCaps(),
                     p.getText(),
                     p.getFontName(),
                     p.getFontSizePt(),
