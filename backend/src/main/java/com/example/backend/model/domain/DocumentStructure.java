@@ -14,6 +14,9 @@ public class DocumentStructure {
 
     private PageMargins margins;
 
+    /** Поля, секции, размер страницы, нумерация (ФТ-3, ФТ-10, ФТ-12). */
+    private DocumentPageSettings pageSettings;
+
     @Builder.Default
     private List<TableInfo> tables = new ArrayList<>();
 

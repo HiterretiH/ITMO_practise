@@ -1,9 +1,12 @@
 package com.example.backend;
 
+import com.example.backend.model.domain.DocumentPageSettings;
 import com.example.backend.model.domain.DocumentStructure;
 import com.example.backend.model.domain.FigureInfo;
 import com.example.backend.model.domain.PageMargins;
+import com.example.backend.model.domain.PageNumberingInfo;
 import com.example.backend.model.domain.ParagraphInfo;
+import com.example.backend.model.domain.SectionPageInfo;
 import com.example.backend.model.domain.TableInfo;
 import com.example.backend.service.DocxLoadService;
 import org.slf4j.Logger;
@@ -47,6 +50,41 @@ public class DocxLoadDebugMain {
         } else {
             log.info("Margins: leftCm={}, rightCm={}, topCm={}, bottomCm={}",
                     margins.getLeftCm(), margins.getRightCm(), margins.getTopCm(), margins.getBottomCm());
+        }
+
+        DocumentPageSettings pageSettings = structure.getPageSettings();
+        if (pageSettings != null) {
+            List<SectionPageInfo> sections = pageSettings.getSections();
+            log.info("Page sections (sectPr): {}", sections.size());
+            for (int i = 0; i < sections.size(); i++) {
+                SectionPageInfo s = sections.get(i);
+                log.info(
+                        "  Section[{}]: margins={}, pageWxH_twips={}x{}, landscape={}, pgStart={}, pgFmt={}, restartPgNum={}",
+                        i,
+                        s.getMargins(),
+                        s.getPageWidthTwips(),
+                        s.getPageHeightTwips(),
+                        s.getLandscape(),
+                        s.getPageNumberStart(),
+                        s.getPageNumberFormat(),
+                        s.getSectionRestartsPageNumbering());
+            }
+            PageNumberingInfo num = pageSettings.getNumbering();
+            if (num != null) {
+                log.info(
+                        "Page numbering: footerPAGE={}, headerPAGE={}, footers={}, headers={}, footerCentered={}, restartInSections={}",
+                        num.isFooterPageFieldPresent(),
+                        num.isHeaderPageFieldPresent(),
+                        num.getFooterPartCount(),
+                        num.getHeaderPartCount(),
+                        num.getFooterPageParagraphCentered(),
+                        num.isPageNumberRestartInSections());
+                if (num.getFooterNotes() != null && !num.getFooterNotes().isEmpty()) {
+                    for (String n : num.getFooterNotes()) {
+                        log.info("  note: {}", n);
+                    }
+                }
+            }
         }
 
         List<TableInfo> tables = structure.getTables();

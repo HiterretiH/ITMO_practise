@@ -6,8 +6,11 @@ import com.example.backend.util.DocumentFileValidator;
 import org.apache.poi.hwpf.HWPFDocument;
 import org.apache.poi.hwpf.usermodel.Paragraph;
 import org.apache.poi.hwpf.usermodel.Range;
+import org.apache.poi.xwpf.model.XWPFHeaderFooterPolicy;
 import org.apache.poi.xwpf.usermodel.*;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTPageMar;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTPageNumber;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTPageSz;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTSectPr;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTStyle;
 import org.apache.xmlbeans.XmlObject;
@@ -15,8 +18,10 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.HashSet;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -33,6 +38,11 @@ public class DocxLoadService {
     private static final double TWIPS_TO_CM = 1.0 / 567.0;
     private static final Pattern TABLE_CAPTION_PATTERN = Pattern.compile("^\\s*таблица\\b.*", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
     private static final Pattern FIGURE_CAPTION_PATTERN = Pattern.compile("^\\s*рисунок\\b.*", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+    /** Поле номера страницы в OOXML ({@code w:instrText}). */
+    private static final Pattern OOXML_PAGE_FIELD = Pattern.compile("(?i)<w:instrText[^>]*>\\s*PAGE\\s");
+    private static final Pattern OOXML_NUMPAGES_FIELD = Pattern.compile("(?i)<w:instrText[^>]*>\\s*NUMPAGES\\s");
+    /** Выравнивание по центру в {@code w:pPr} (для колонтитула с номером страницы). */
+    private static final Pattern OOXML_JC_CENTER = Pattern.compile("<w:jc\\s[^>]*w:val=\"center\"", Pattern.CASE_INSENSITIVE);
     private static final int CAPTION_LINK_DISTANCE = 2;
     public DocumentStructure load(String filename, String contentType, InputStream inputStream) {
         DocumentFileValidator.validate(filename, contentType);
@@ -98,9 +108,11 @@ public class DocxLoadService {
             linkCaptionsToFigures(captions, figureInfos, bodyParagraphs);
 
             PageMargins margins = extractMargins(doc);
+            DocumentPageSettings pageSettings = extractDocumentPageSettings(doc);
             return DocumentStructure.builder()
                     .paragraphs(paragraphs)
                     .margins(margins)
+                    .pageSettings(pageSettings)
                     .tables(tableInfos)
                     .figures(figureInfos)
                     .fullText(fullText.toString().trim())
@@ -311,6 +323,258 @@ public class DocxLoadService {
                 .build();
     }
 
+    /**
+     * Секции ({@code w:sectPr}), поля, размер листа, параметры {@code w:pgNumType}; нумерация в колонтитулах (ФТ-3, ФТ-12).
+     */
+    private DocumentPageSettings extractDocumentPageSettings(XWPFDocument doc) {
+        List<CTSectPr> sectPrs = new ArrayList<>();
+        for (XWPFParagraph p : doc.getParagraphs()) {
+            if (p.getCTP().getPPr() != null && p.getCTP().getPPr().isSetSectPr()) {
+                sectPrs.add(p.getCTP().getPPr().getSectPr());
+            }
+        }
+        if (doc.getDocument().getBody().isSetSectPr()) {
+            sectPrs.add(doc.getDocument().getBody().getSectPr());
+        }
+
+        PageNumberingInfo numbering = analyzePageNumbering(doc);
+        if (sectPrs.isEmpty()) {
+            if (numbering != null) {
+                numbering.setPageNumberRestartInSections(false);
+            }
+            return DocumentPageSettings.builder()
+                    .sections(List.of())
+                    .numbering(numbering)
+                    .build();
+        }
+
+        List<SectionPageInfo> sections = new ArrayList<>();
+        for (int i = 0; i < sectPrs.size(); i++) {
+            sections.add(mapSectPr(sectPrs.get(i), i));
+        }
+        boolean restart = sections.stream()
+                .anyMatch(s -> Boolean.TRUE.equals(s.getSectionRestartsPageNumbering()));
+        if (numbering != null) {
+            numbering.setPageNumberRestartInSections(restart);
+        }
+        return DocumentPageSettings.builder()
+                .sections(sections)
+                .numbering(numbering)
+                .build();
+    }
+
+    private static SectionPageInfo mapSectPr(CTSectPr sectPr, int index) {
+        var b = SectionPageInfo.builder().sectionIndex(index);
+        if (sectPr.isSetPgMar()) {
+            CTPageMar pgMar = sectPr.getPgMar();
+            b.margins(PageMargins.builder()
+                    .leftCm(twipsToCm(pgMar.getLeft()))
+                    .rightCm(twipsToCm(pgMar.getRight()))
+                    .topCm(twipsToCm(pgMar.getTop()))
+                    .bottomCm(twipsToCm(pgMar.getBottom()))
+                    .build());
+        }
+        if (sectPr.isSetPgSz()) {
+            CTPageSz pgSz = sectPr.getPgSz();
+            if (pgSz.getW() != null) {
+                b.pageWidthTwips(toLong(pgSz.getW()));
+            }
+            if (pgSz.getH() != null) {
+                b.pageHeightTwips(toLong(pgSz.getH()));
+            }
+            if (pgSz.isSetOrient()) {
+                String o = pgSz.getOrient().toString();
+                b.landscape(o != null && o.toLowerCase(Locale.ROOT).contains("landscape"));
+            }
+        }
+        if (sectPr.isSetPgNumType()) {
+            CTPageNumber pn = sectPr.getPgNumType();
+            // Только явный w:start означает заданный старт нумерации; сам по себе w:pgNumType с fmt=decimal
+            // на каждом разрыве секции в Word — не «перезапуск».
+            b.sectionRestartsPageNumbering(pn.isSetStart());
+            if (pn.isSetStart()) {
+                b.pageNumberStart(pn.getStart().intValue());
+            }
+            if (pn.isSetFmt() && pn.getFmt() != null) {
+                b.pageNumberFormat(pn.getFmt().toString());
+            }
+        } else {
+            b.sectionRestartsPageNumbering(false);
+        }
+        return b.build();
+    }
+
+    private PageNumberingInfo analyzePageNumbering(XWPFDocument doc) {
+        List<XWPFFooter> footers = collectUniqueFooters(doc);
+        List<XWPFHeader> headers = collectUniqueHeaders(doc);
+
+        boolean footerPage = false;
+        boolean headerPage = false;
+        Boolean footerCenter = null;
+
+        for (XWPFFooter f : footers) {
+            String rawXml = readPartXml(f);
+            if (footerXmlContainsPageField(rawXml)) {
+                footerPage = true;
+                boolean centered = footerXmlHasCenterAlignment(rawXml);
+                footerCenter = footerCenter == null ? centered : footerCenter && centered;
+                continue;
+            }
+            // Запасной путь: абзацы без SDT (классическое поле PAGE).
+            for (XWPFParagraph p : collectParagraphsDeep(f)) {
+                if (!paragraphContainsPageNumberField(p)) {
+                    continue;
+                }
+                footerPage = true;
+                boolean centered = p.getAlignment() == ParagraphAlignment.CENTER;
+                footerCenter = footerCenter == null ? centered : footerCenter && centered;
+            }
+        }
+        for (XWPFHeader h : headers) {
+            String rawXml = readPartXml(h);
+            if (headerXmlContainsPageField(rawXml)) {
+                headerPage = true;
+                continue;
+            }
+            for (XWPFParagraph p : collectParagraphsDeep(h)) {
+                if (paragraphContainsPageNumberField(p)) {
+                    headerPage = true;
+                }
+            }
+        }
+
+        List<String> notes = new ArrayList<>();
+        if (footerPage && Boolean.FALSE.equals(footerCenter)) {
+            notes.add("Номер страницы в подвале: абзац с полем PAGE не выровнен по центру (ожидается по центру внизу по ФТ-12).");
+        }
+        if (!footerPage && headerPage) {
+            notes.add("Поле номера страницы найдено в верхнем колонтитуле; по ФТ-12 номер должен быть внизу по центру.");
+        }
+
+        return PageNumberingInfo.builder()
+                .footerPageFieldPresent(footerPage)
+                .headerPageFieldPresent(headerPage)
+                .footerPartCount(footers.size())
+                .headerPartCount(headers.size())
+                .footerPageParagraphCentered(footerPage ? footerCenter : null)
+                .pageNumberRestartInSections(false)
+                .footerNotes(notes)
+                .build();
+    }
+
+    private static List<XWPFFooter> collectUniqueFooters(XWPFDocument doc) {
+        LinkedHashSet<XWPFFooter> set = new LinkedHashSet<>();
+        List<XWPFFooter> list = doc.getFooterList();
+        if (list != null) {
+            set.addAll(list);
+        }
+        XWPFHeaderFooterPolicy policy = doc.getHeaderFooterPolicy();
+        if (policy != null) {
+            addIfNotNull(set, policy.getDefaultFooter());
+            addIfNotNull(set, policy.getFirstPageFooter());
+            addIfNotNull(set, policy.getEvenPageFooter());
+        }
+        return new ArrayList<>(set);
+    }
+
+    private static List<XWPFHeader> collectUniqueHeaders(XWPFDocument doc) {
+        LinkedHashSet<XWPFHeader> set = new LinkedHashSet<>();
+        List<XWPFHeader> list = doc.getHeaderList();
+        if (list != null) {
+            set.addAll(list);
+        }
+        XWPFHeaderFooterPolicy policy = doc.getHeaderFooterPolicy();
+        if (policy != null) {
+            addIfNotNull(set, policy.getDefaultHeader());
+            addIfNotNull(set, policy.getFirstPageHeader());
+            addIfNotNull(set, policy.getEvenPageHeader());
+        }
+        return new ArrayList<>(set);
+    }
+
+    private static <T> void addIfNotNull(LinkedHashSet<T> set, T part) {
+        if (part != null) {
+            set.add(part);
+        }
+    }
+
+    private static List<XWPFParagraph> collectParagraphsDeep(XWPFHeaderFooter part) {
+        List<XWPFParagraph> out = new ArrayList<>();
+        for (IBodyElement el : part.getBodyElements()) {
+            if (el instanceof XWPFParagraph p) {
+                out.add(p);
+            } else if (el instanceof XWPFTable table) {
+                collectParagraphsFromTable(table, out);
+            }
+        }
+        return out;
+    }
+
+    private static void collectParagraphsFromTable(XWPFTable table, List<XWPFParagraph> out) {
+        for (XWPFTableRow row : table.getRows()) {
+            for (XWPFTableCell cell : row.getTableCells()) {
+                for (XWPFParagraph p : cell.getParagraphs()) {
+                    out.add(p);
+                }
+                for (XWPFTable nested : cell.getTables()) {
+                    collectParagraphsFromTable(nested, out);
+                }
+            }
+        }
+    }
+
+    /**
+     * Поле номера страницы: {@code PAGE}, иногда {@code NUMPAGES}; также {@code fldSimple} с instr PAGE.
+     */
+    private static boolean paragraphContainsPageNumberField(XWPFParagraph p) {
+        String xml = p.getCTP().xmlText();
+        if (xml == null || xml.isEmpty()) {
+            return false;
+        }
+        if (OOXML_PAGE_FIELD.matcher(xml).find() || OOXML_NUMPAGES_FIELD.matcher(xml).find()) {
+            return true;
+        }
+        if (xml.contains("w:fldSimple") && xml.contains("PAGE")) {
+            return true;
+        }
+        return xml.contains("instrText") && Pattern.compile("(?i)instrText[^>]*>[^<]*\\bPAGE\\b").matcher(xml).find();
+    }
+
+    private static String readPartXml(XWPFHeaderFooter part) {
+        try (InputStream is = part.getPackagePart().getInputStream()) {
+            return new String(is.readAllBytes(), StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            return "";
+        }
+    }
+
+    /**
+     * Полный XML колонтитула: классическое поле PAGE, {@code fldSimple}, галерея Word «Page Numbers (Bottom of Page)» в {@code w:sdt}.
+     */
+    private static boolean footerXmlContainsPageField(String xml) {
+        if (xml == null || xml.isEmpty()) {
+            return false;
+        }
+        if (OOXML_PAGE_FIELD.matcher(xml).find() || OOXML_NUMPAGES_FIELD.matcher(xml).find()) {
+            return true;
+        }
+        if (xml.contains("w:fldSimple") && Pattern.compile("(?i)instr\\s*=\\s*[\"'][^\"']*PAGE").matcher(xml).find()) {
+            return true;
+        }
+        if (xml.contains("docPartGallery") && xml.toLowerCase(Locale.ROOT).contains("page numbers")) {
+            return true;
+        }
+        return false;
+    }
+
+    private static boolean headerXmlContainsPageField(String xml) {
+        return footerXmlContainsPageField(xml);
+    }
+
+    private static boolean footerXmlHasCenterAlignment(String xml) {
+        return OOXML_JC_CENTER.matcher(xml).find();
+    }
+
     private static double twipsToCm(Object twips) {
         BigInteger value = toBigInteger(twips);
         if (value == null) return 0;
@@ -326,6 +590,11 @@ public class DocxLoadService {
         } catch (NumberFormatException e) {
             return null;
         }
+    }
+
+    private static Long toLong(Object value) {
+        BigInteger bi = toBigInteger(value);
+        return bi == null ? null : bi.longValue();
     }
 
     private static Double safeFontSize(XWPFRun run) {
