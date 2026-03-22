@@ -1,0 +1,7 @@
+p-card {
+  margin: 1em;
+}
+
+a {
+  color: var(--p-primary-color);
+}
