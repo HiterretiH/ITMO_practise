@@ -1,4 +1,4 @@
-package com.example.backend.model.domain;
+package com.example.backend.domain;
 
 import lombok.Builder;
 import lombok.Data;

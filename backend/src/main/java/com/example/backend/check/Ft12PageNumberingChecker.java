@@ -1,9 +1,9 @@
 package com.example.backend.check;
 
-import com.example.backend.model.domain.DocumentPageSettings;
-import com.example.backend.model.domain.PageNumberingInfo;
-import com.example.backend.model.domain.ParagraphInfo;
-import com.example.backend.model.domain.SectionPageInfo;
+import com.example.backend.domain.DocumentPageSettings;
+import com.example.backend.domain.PageNumberingInfo;
+import com.example.backend.domain.ParagraphInfo;
+import com.example.backend.domain.SectionPageInfo;
 
 import java.util.ArrayList;
 import java.util.List;

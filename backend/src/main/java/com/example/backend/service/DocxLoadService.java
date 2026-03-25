@@ -2,7 +2,7 @@ package com.example.backend.service;
 
 import com.example.backend.check.Ft8MainFontChecker;
 import com.example.backend.exception.ValidationException;
-import com.example.backend.model.domain.*;
+import com.example.backend.domain.*;
 import com.example.backend.util.DocumentFileValidator;
 import com.example.backend.util.PageLocator;
 import org.apache.poi.ooxml.POIXMLTypeLoader;

@@ -1,4 +1,4 @@
-package com.example.backend.model.domain;
+package com.example.backend.domain;
 
 import lombok.Builder;
 import lombok.Data;
@@ -6,9 +6,6 @@ import lombok.Data;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Параметры страницы и нумерации, извлечённые из .docx (ФТ-3: поля страницы, информация о нумерации страниц).
- */
 @Data
 @Builder
 public class DocumentPageSettings {

@@ -1,4 +1,4 @@
 package com.example.backend.json;
 
-public class RulesConfigLoader {
+public class CheckRequest {
 }

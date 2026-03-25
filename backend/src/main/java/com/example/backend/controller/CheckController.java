@@ -1,7 +1,7 @@
 package com.example.backend.controller;
 
-import com.example.backend.model.domain.DocumentStructure;
-import com.example.backend.model.dto.UploadResultDto;
+import com.example.backend.domain.DocumentStructure;
+import com.example.backend.json.UploadResult;
 import com.example.backend.service.DocxLoadService;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -25,13 +25,13 @@ public class CheckController {
     }
 
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<UploadResultDto> uploadDocument(
+    public ResponseEntity<UploadResult> uploadDocument(
             @RequestParam("file") MultipartFile file) throws IOException {
         String filename = file.getOriginalFilename();
         String contentType = file.getContentType();
         try (InputStream inputStream = file.getInputStream()) {
             DocumentStructure structure = docxLoadService.load(filename, contentType, inputStream);
-            UploadResultDto dto = UploadResultDto.builder()
+            UploadResult dto = UploadResult.builder()
                 .parsed(true)
                 .format(structure.getFormat())
                 .paragraphs(structure.getParagraphs().size())
