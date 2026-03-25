@@ -8,13 +8,6 @@
   margin: 0 auto;
 }
 
-.page-title {
-  margin: 0 0 0.5rem;
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: var(--p-text-color);
-}
-
 .page-lead {
   margin: 0 0 1.25rem;
   line-height: 1.5;

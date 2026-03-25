@@ -1,6 +1,7 @@
 #header {
   background-color: var(--p-surface-0);
-  box-shadow: 0 0 5px 2px rgba(0, 0, 0, 0.12);
+  border-bottom: 1px solid var(--p-surface-200);
+  box-shadow: 0 2px 8px rgba(30, 70, 120, 0.08);
   color: var(--p-text-color);
   display: flex;
   justify-content: space-between;

@@ -3,13 +3,12 @@
 
 <div class="page">
   <div class="page-inner">
-    <h1 class="page-title">Проверка документа ВКР</h1>
-    <p class="page-lead">
-      Загрузите файл в формате .docx. Сервис проверит структуру и оформление по требованиям ИТМО и покажет
-      подробный отчёт.
-    </p>
+    <p-card header="Проверка документа ВКР">
+      <p class="page-lead">
+        Загрузите файл в формате .docx. Сервис проверит структуру и оформление по требованиям ИТМО и покажет
+        подробный отчёт.
+      </p>
 
-    <p-card header="Загрузка файла">
       @if (loading) {
         <div class="loading-block">
           <p-progressSpinner strokeWidth="4" ariaLabel="Проверка" />

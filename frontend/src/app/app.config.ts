@@ -3,10 +3,10 @@ import { provideHttpClient } from '@angular/common/http';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { provideRouter } from '@angular/router';
 import { MessageService } from 'primeng/api';
-import Aura from '@primeuix/themes/aura';
 import { providePrimeNG } from 'primeng/config';
 
 import { routes } from './app.routes';
+import { AppAuraPreset } from './theme/app-preset';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -17,7 +17,10 @@ export const appConfig: ApplicationConfig = {
     MessageService,
     providePrimeNG({
       theme: {
-        preset: Aura,
+        preset: AppAuraPreset,
+        options: {
+          darkModeSelector: false,
+        },
       },
     }),
   ],

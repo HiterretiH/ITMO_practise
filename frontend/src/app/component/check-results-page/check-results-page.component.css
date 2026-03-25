@@ -8,18 +8,11 @@
   margin: 0 auto;
 }
 
-.page-title {
-  margin: 0 0 1rem;
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: var(--p-text-color);
-}
-
 .toolbar {
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
 }
 
-.card-spaced {
+:host ::ng-deep .nested-card {
   margin-top: 1rem;
 }
 
