@@ -60,4 +60,13 @@ public class PageNumberingInfo {
 
     @Builder.Default
     private List<String> footerNotes = new ArrayList<>();
+
+    /**
+     * Объединённый текст абзацев каждого уникального нижнего колонтитула
+     * ({@code XWPFParagraph.getText()}). В XML иногда есть кеш последнего значения полей;
+     * это не то же самое, что «какой номер на физической странице N» — для каждой страницы
+     * Word вычисляет поле PAGE при отрисовке, в файле хранится в основном инструкция поля.
+     */
+    @Builder.Default
+    private List<String> footerPartCombinedTexts = new ArrayList<>();
 }

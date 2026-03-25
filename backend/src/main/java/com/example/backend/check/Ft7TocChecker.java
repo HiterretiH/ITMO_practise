@@ -438,8 +438,11 @@ public final class Ft7TocChecker {
         Integer bodyPage = match.getPageIndex();
         if (bodyPage != null && line.pageNumber() != bodyPage) {
             out.add(String.format(Locale.ROOT,
-                    "ФТ-7: в содержании для «%s» указана стр. %d, в документе заголовок начинается со стр. %d.",
+                    "ФТ-7: в содержании для «%s» указана стр. %d, в документе заголовок начинается со стр. %d — "
+                            + "в строке оглавления в шаблоне замените номер: вместо %d укажите %d.",
                     shorten(line.titleText(), 80),
+                    line.pageNumber(),
+                    bodyPage,
                     line.pageNumber(),
                     bodyPage));
         }

@@ -9,6 +9,8 @@ import com.example.backend.check.Ft9MainParagraphChecker;
 import com.example.backend.check.Ft10PageMarginsChecker;
 import com.example.backend.check.Ft11HeadingFormattingChecker;
 import com.example.backend.check.Ft12PageNumberingChecker;
+import com.example.backend.check.Ft13FigureCaptionChecker;
+import com.example.backend.check.Ft14TableCaptionChecker;
 import com.example.backend.model.domain.DocumentPageSettings;
 import com.example.backend.model.domain.DocumentStructure;
 import com.example.backend.model.domain.FigureInfo;
@@ -36,6 +38,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class DocxLoadDebugMain {
 
@@ -106,6 +109,12 @@ public class DocxLoadDebugMain {
                         log.info("  note: {}", n);
                     }
                 }
+                if (num.getFooterPartCombinedTexts() != null && !num.getFooterPartCombinedTexts().isEmpty()) {
+                    log.info("  footer part text (POI getText; не список «по каждой странице», а шаблон(ы) подвала):");
+                    for (int i = 0; i < num.getFooterPartCombinedTexts().size(); i++) {
+                        log.info("    [{}] {}", i, num.getFooterPartCombinedTexts().get(i));
+                    }
+                }
             }
         }
 
@@ -123,16 +132,16 @@ public class DocxLoadDebugMain {
         log.info("Tables count: {}", tables.size());
         for (int i = 0; i < tables.size(); i++) {
             TableInfo t = tables.get(i);
-            log.info("Table[{}]: caption='{}', paragraphIndex={}, pageIndex={}",
-                    i, t.getCaption(), t.getParagraphIndex(), t.getPageIndex());
+            log.info("Table[{}]: caption='{}', paragraphIndex={}, captionParagraphIndex={}, pageIndex={}",
+                    i, t.getCaption(), t.getParagraphIndex(), t.getCaptionParagraphIndex(), t.getPageIndex());
         }
 
         List<FigureInfo> figures = structure.getFigures();
         log.info("Figures count: {}", figures.size());
         for (int i = 0; i < figures.size(); i++) {
             FigureInfo f = figures.get(i);
-            log.info("Figure[{}]: caption='{}', paragraphIndex={}, pageIndex={}",
-                    i, f.getCaption(), f.getParagraphIndex(), f.getPageIndex());
+            log.info("Figure[{}]: caption='{}', paragraphIndex={}, captionParagraphIndex={}, pageIndex={}",
+                    i, f.getCaption(), f.getParagraphIndex(), f.getCaptionParagraphIndex(), f.getPageIndex());
         }
 
         List<ParagraphInfo> paragraphs = structure.getParagraphs();
@@ -222,11 +231,26 @@ public class DocxLoadDebugMain {
             log.info("  {}", line);
         }
 
-        List<String> ft12 = Ft12PageNumberingChecker.check(pageSettings, paragraphs);
+        List<String> ft12 = Ft12PageNumberingChecker.check(
+                pageSettings, paragraphs, structure.getSectPrParagraphIndices());
         log.info("ФТ-12 (п. 4.3.1: постоянная сквозная нумерация, внизу по центру, без точки после номера), замечаний: {}", ft12.size());
         for (String line : ft12) {
             log.info("  {}", line);
         }
+
+        List<String> ft13 = Ft13FigureCaptionChecker.check(figures, paragraphs);
+        log.info("ФТ-13 (п. 4.5.3: подпись «Рисунок N – …», под рисунком, по центру), замечаний: {}", ft13.size());
+        for (String line : ft13) {
+            log.info("  {}", line);
+        }
+
+        List<String> ft14 = Ft14TableCaptionChecker.check(tables, paragraphs);
+        log.info("ФТ-14 (п. 4.6.3: название «Таблица N – …» над таблицей слева; настоящая таблица Word), замечаний: {}", ft14.size());
+        for (String line : ft14) {
+            log.info("  {}", line);
+        }
+
+        printPageEstimateAndAlignmentDiagnostic(paragraphs, pageSettings);
 
         printParagraphStats(paragraphs);
         printHeadingCandidates(paragraphs);
@@ -305,6 +329,92 @@ public class DocxLoadDebugMain {
             return underBackend.toAbsolutePath().normalize();
         }
         throw new IllegalStateException("Файл не найден: " + first + " (cwd должен быть каталогом backend или укажите абсолютный путь)");
+    }
+
+    /**
+     * В лог (и в output/wrong.txt при файловом аппендере): сводка по оценке номеров страниц из OOXML
+     * и выравниванию абзацев по порядку — чтобы сравнить с тем, что даёт w:pgNumType и поле PAGE в подвале.
+     */
+    private static void printPageEstimateAndAlignmentDiagnostic(
+            List<ParagraphInfo> paragraphs,
+            DocumentPageSettings pageSettings) {
+        log.info("=== DIAG: оценка страниц (PageLocator) и выравнивание абзацев по порядку ===");
+        log.info("DIAG: в файле .docx нет таблицы «номер на физ. стр.1, стр.2, …»; в подвале — шаблон(ы) с полем PAGE, "
+                + "Word подставляет номер при вёрстке. Ряд чисел из «Содержания» в теле документа — это не подвал (см. ФТ-7).");
+        PageNumberingInfo pnDiag = pageSettings != null ? pageSettings.getNumbering() : null;
+        if (pnDiag != null && pnDiag.getFooterPartCombinedTexts() != null && !pnDiag.getFooterPartCombinedTexts().isEmpty()) {
+            log.info("DIAG: текст подвалов как отдаёт POI (иногда кеш поля; не «по страницам»):");
+            for (int i = 0; i < pnDiag.getFooterPartCombinedTexts().size(); i++) {
+                log.info("DIAG:   footer[{}] «{}»", i, pnDiag.getFooterPartCombinedTexts().get(i));
+            }
+        }
+        if (paragraphs == null || paragraphs.isEmpty()) {
+            log.info("DIAG: нет абзацев");
+            log.info("=== DIAG end ===");
+            return;
+        }
+        int minP = Integer.MAX_VALUE;
+        int maxP = 0;
+        StringBuilder pageIndexOnly = new StringBuilder();
+        for (int i = 0; i < paragraphs.size(); i++) {
+            ParagraphInfo p = paragraphs.get(i);
+            Integer pi = p.getPageIndex();
+            Integer pe = p.getPageEndIndex();
+            if (pi != null) {
+                minP = Math.min(minP, pi);
+                maxP = Math.max(maxP, pi);
+            }
+            if (pe != null) {
+                maxP = Math.max(maxP, pe);
+            }
+            if (pageIndexOnly.length() > 0) {
+                pageIndexOnly.append(',');
+            }
+            pageIndexOnly.append(pi == null ? "?" : pi.toString());
+        }
+        if (minP == Integer.MAX_VALUE) {
+            minP = 0;
+        }
+        log.info("DIAG: по абзацам minPage={} maxPage={} (pageIndex/pageEndIndex)", minP, maxP);
+        log.info("DIAG: последовательность pageIndex по порядку абзацев #0..#{}: {}", paragraphs.size() - 1, pageIndexOnly);
+
+        final int maxChunk = 3800;
+        StringBuilder chunk = new StringBuilder();
+        for (int i = 0; i < paragraphs.size(); i++) {
+            ParagraphInfo p = paragraphs.get(i);
+            String pi = p.getPageIndex() == null ? "?" : String.valueOf(p.getPageIndex());
+            String pe = p.getPageEndIndex() == null ? "?" : String.valueOf(p.getPageEndIndex());
+            String al = p.getAlignment() == null ? "null" : p.getAlignment();
+            String part = String.format(Locale.ROOT, "#%d:%s-%s|%s; ", i, pi, pe, al);
+            if (chunk.length() + part.length() > maxChunk) {
+                log.info("DIAG: абзацы стр./выравнивание (фрагмент): {}", chunk);
+                chunk = new StringBuilder(part);
+            } else {
+                chunk.append(part);
+            }
+        }
+        if (chunk.length() > 0) {
+            log.info("DIAG: абзацы стр./выравнивание (фрагмент): {}", chunk);
+        }
+
+        if (pageSettings != null && pageSettings.getSections() != null && !pageSettings.getSections().isEmpty() && maxP >= 1) {
+            SectionPageInfo s0 = pageSettings.getSections().get(0);
+            Integer wStart = s0.getPageNumberStart();
+            if (wStart != null) {
+                String fromWStart = IntStream.rangeClosed(1, maxP)
+                        .map(pg -> wStart + pg - 1)
+                        .mapToObj(String::valueOf)
+                        .collect(Collectors.joining(","));
+                String wantOneToN = IntStream.rangeClosed(1, maxP)
+                        .mapToObj(String::valueOf)
+                        .collect(Collectors.joining(","));
+                log.info("DIAG: w:start первой секции = {} → поле PAGE на физ. стр. 1..{} даст номера: {}", wStart, maxP, fromWStart);
+                log.info("DIAG: при сквозной нумерации 1..N на тех же страницах в подвале должны быть: {}", wantOneToN);
+            } else {
+                log.info("DIAG: w:start в первой секции не задан (null) — старт номера страницы по умолчанию обычно 1");
+            }
+        }
+        log.info("=== DIAG end ===");
     }
 
     private static void printParagraphStats(List<ParagraphInfo> paragraphs) {

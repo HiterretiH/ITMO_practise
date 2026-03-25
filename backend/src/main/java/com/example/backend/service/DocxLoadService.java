@@ -143,9 +143,11 @@ public class DocxLoadService {
             }
 
             populateFigureInfos(figureInfos, bodyParagraphs);
-            syncFigurePageIndices(figureInfos, paragraphs);
             linkCaptionsToTables(captions, tableInfos, bodyParagraphs);
             linkCaptionsToFigures(captions, figureInfos, bodyParagraphs);
+            fillMissingTableCaptionParagraphIndices(tableInfos, paragraphs);
+            syncFigurePageIndices(figureInfos, paragraphs);
+            syncTablePageIndices(tableInfos, paragraphs);
 
             if (doc.getDocument().getBody().isSetSectPr()) {
                 collectedSectPrs.add(doc.getDocument().getBody().getSectPr());
@@ -741,8 +743,15 @@ public class DocxLoadService {
         for (int i = 0; i < sectPrs.size(); i++) {
             sections.add(mapSectPr(sectPrs.get(i), i));
         }
-        boolean restart = sections.stream()
-                .anyMatch(s -> Boolean.TRUE.equals(s.getSectionRestartsPageNumbering()));
+        // Перезапуск сквозной нумерации — только когда w:start задан не в первой секции списка
+        // (в первой секции w:start задаёт начальный номер, а не «сброс» после предыдущего фрагмента).
+        boolean restart = false;
+        for (int i = 1; i < sections.size(); i++) {
+            if (Boolean.TRUE.equals(sections.get(i).getSectionRestartsPageNumbering())) {
+                restart = true;
+                break;
+            }
+        }
         if (numbering != null) {
             numbering.setPageNumberRestartInSections(restart);
         }
@@ -864,6 +873,11 @@ public class DocxLoadService {
             }
         }
 
+        List<String> footerCombined = new ArrayList<>();
+        for (XWPFFooter f : footers) {
+            footerCombined.add(combineFooterParagraphPlainText(f));
+        }
+
         return PageNumberingInfo.builder()
                 .footerPageFieldPresent(footerPage)
                 .headerPageFieldPresent(headerPage)
@@ -878,7 +892,35 @@ public class DocxLoadService {
                 .evenPageFooterPresent(evenPageFooterPresent)
                 .evenPageFooterHasPageField(evenPageFooterHasPageField)
                 .footerNotes(new ArrayList<>())
+                .footerPartCombinedTexts(footerCombined)
                 .build();
+    }
+
+    /** Текст подвала как его отдаёт POI (в т.ч. кеш полей, если Word его сохранил). */
+    private static String combineFooterParagraphPlainText(XWPFFooter f) {
+        if (f == null) {
+            return "(null)";
+        }
+        StringBuilder sb = new StringBuilder();
+        for (XWPFParagraph p : collectParagraphsDeep(f)) {
+            String t = p.getText();
+            if (t == null) {
+                continue;
+            }
+            String norm = t.replace('\r', ' ').replace('\n', ' ').trim();
+            if (norm.isEmpty()) {
+                continue;
+            }
+            if (sb.length() > 0) {
+                sb.append(" | ");
+            }
+            sb.append(norm);
+        }
+        String s = sb.toString();
+        if (s.length() > 520) {
+            return s.substring(0, 520) + "…";
+        }
+        return s.isEmpty() ? "(пусто)" : s;
     }
 
     /** Наличие поля PAGE в части подвала (XML + обход абзацев). */
@@ -1254,7 +1296,46 @@ public class DocxLoadService {
                     .toList();
 
             if (candidates.size() == 1) {
-                candidates.get(0).setCaption(c.text);
+                TableInfo t = candidates.get(0);
+                t.setCaption(c.text);
+                t.setCaptionParagraphIndex(paragraphMeta.paragraphIndex);
+            }
+        }
+    }
+
+    /** Если название пришло из {@link #findNearbyTableCaption}, индекс абзаца мог не проставиться. */
+    private static void fillMissingTableCaptionParagraphIndices(
+            List<TableInfo> tables, List<ParagraphInfo> paragraphs) {
+        for (TableInfo t : tables) {
+            if (t.getCaption() != null && !t.getCaption().isBlank() && t.getCaptionParagraphIndex() == null) {
+                Integer idx = findParagraphIndexByExactText(paragraphs, t.getCaption());
+                t.setCaptionParagraphIndex(idx);
+            }
+        }
+    }
+
+    private static Integer findParagraphIndexByExactText(List<ParagraphInfo> paragraphs, String text) {
+        if (text == null) {
+            return null;
+        }
+        String want = text.trim();
+        for (int i = 0; i < paragraphs.size(); i++) {
+            String p = paragraphs.get(i).getText();
+            if (p != null && p.trim().equals(want)) {
+                return i;
+            }
+        }
+        return null;
+    }
+
+    private static void syncTablePageIndices(List<TableInfo> tables, List<ParagraphInfo> paragraphs) {
+        for (TableInfo t : tables) {
+            int idx = t.getParagraphIndex();
+            if (idx >= 0 && idx < paragraphs.size()) {
+                ParagraphInfo pi = paragraphs.get(idx);
+                if (pi.getPageIndex() != null) {
+                    t.setPageIndex(pi.getPageIndex());
+                }
             }
         }
     }
@@ -1272,7 +1353,9 @@ public class DocxLoadService {
                     .toList();
 
             if (candidates.size() == 1) {
-                candidates.get(0).setCaption(c.text);
+                FigureInfo fig = candidates.get(0);
+                fig.setCaption(c.text);
+                fig.setCaptionParagraphIndex(paragraphMeta.paragraphIndex);
             }
         }
     }
