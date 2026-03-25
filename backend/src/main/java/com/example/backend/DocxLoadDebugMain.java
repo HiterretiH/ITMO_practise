@@ -7,6 +7,8 @@ import com.example.backend.check.Ft7TocChecker;
 import com.example.backend.check.Ft8MainFontChecker;
 import com.example.backend.check.Ft9MainParagraphChecker;
 import com.example.backend.check.Ft10PageMarginsChecker;
+import com.example.backend.check.Ft11HeadingFormattingChecker;
+import com.example.backend.check.Ft12PageNumberingChecker;
 import com.example.backend.model.domain.DocumentPageSettings;
 import com.example.backend.model.domain.DocumentStructure;
 import com.example.backend.model.domain.FigureInfo;
@@ -211,6 +213,18 @@ public class DocxLoadDebugMain {
                 structure.getSectPrParagraphIndices());
         log.info("ФТ-10 (поля страницы: левое 30 мм; правое 10–15 мм; верх/низ по 20 мм, п. 4.2), замечаний: {}", ft10.size());
         for (String line : ft10) {
+            log.info("  {}", line);
+        }
+
+        List<String> ft11 = Ft11HeadingFormattingChecker.check(paragraphs);
+        log.info("ФТ-11 (заголовки разделов и подразделов: единый стиль глав, подразделы, точка, переносы, аббревиатуры, отступ; п. 4.4.4), сообщений: {}", ft11.size());
+        for (String line : ft11) {
+            log.info("  {}", line);
+        }
+
+        List<String> ft12 = Ft12PageNumberingChecker.check(pageSettings, paragraphs);
+        log.info("ФТ-12 (п. 4.3.1: постоянная сквозная нумерация, внизу по центру, без точки после номера), замечаний: {}", ft12.size());
+        for (String line : ft12) {
             log.info("  {}", line);
         }
 

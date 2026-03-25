@@ -38,6 +38,26 @@ public class PageNumberingInfo {
      */
     private boolean pageNumberRestartInSections;
 
+    /**
+     * В XML нижнего колонтитула после поля PAGE найден отдельный прогон с точкой (типичная ошибка «номер.»).
+     */
+    private boolean footerTrailingPeriodAfterPageSuspected;
+
+    /** Поле PAGE в подвале по умолчанию (через HeaderFooterPolicy). */
+    private boolean defaultFooterHasPageField;
+
+    /** Задан отдельный подвал первой страницы. */
+    private boolean firstPageFooterPresent;
+
+    /** В отдельном подвале первой страницы есть поле PAGE (если {@link #firstPageFooterPresent}). */
+    private boolean firstPageFooterHasPageField;
+
+    /** Задан отдельный подвал чётных страниц. */
+    private boolean evenPageFooterPresent;
+
+    /** В подвале чётных страниц есть поле PAGE (если {@link #evenPageFooterPresent}). */
+    private boolean evenPageFooterHasPageField;
+
     @Builder.Default
     private List<String> footerNotes = new ArrayList<>();
 }

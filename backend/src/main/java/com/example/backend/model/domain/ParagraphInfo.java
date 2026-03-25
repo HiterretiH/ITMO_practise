@@ -33,6 +33,13 @@ public class ParagraphInfo {
     private String fontName;
     private Double fontSizePt;
     private Boolean bold;
+
+    /**
+     * Полужирное по имени гарнитуры в прогонах (Semibold, Demi и т.п.) — в Word «полужирный» часто так,
+     * а не через флаг {@code w:b}.
+     */
+    private Boolean semiboldEmphasis;
+
     private Boolean italic;
     private String colorHex;
     private String alignment;
@@ -49,6 +56,12 @@ public class ParagraphInfo {
 
     /** Содержит формулу Office Math (oMath) — исключается из ФТ-8/ФТ-9. */
     private boolean containsFormula;
+
+    /**
+     * В {@code w:p} есть элементы дискреционного переноса Word ({@code w:softHyphen}, {@code w:optionalHyphen}).
+     * Обычный перенос строки по ширине страницы в XML не хранится — см. ФТ-11.
+     */
+    private boolean ooxmlDiscretionaryHyphenMarks;
 
     /**
      * По прогонам ({@code w:r}): есть фрагмент с шрифтом не Times New Roman (в т.ч. прямое оформление поверх стиля).

@@ -40,6 +40,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @Service
@@ -54,6 +55,9 @@ public class DocxLoadService {
     /** Элементы шрифта в {@code w:rPr} — разные версии XmlBeans дают разный API, поэтому смотрим XML. */
     private static final Pattern OOXML_RPR_CAPS = Pattern.compile("<w:caps\\b", Pattern.CASE_INSENSITIVE);
     private static final Pattern OOXML_RPR_SMALL_CAPS = Pattern.compile("<w:smallCaps\\b", Pattern.CASE_INSENSITIVE);
+    /** Дискреционный перенос в теле абзаца (не путать с визуальным переносом строки — тот в XML не хранится). */
+    private static final Pattern OOXML_SOFT_HYPHEN = Pattern.compile("<w:softHyphen\\b", Pattern.CASE_INSENSITIVE);
+    private static final Pattern OOXML_OPTIONAL_HYPHEN = Pattern.compile("<w:optionalHyphen\\b", Pattern.CASE_INSENSITIVE);
     /** Выравнивание по центру в {@code w:pPr} (для колонтитула с номером страницы). */
     private static final Pattern OOXML_JC_CENTER = Pattern.compile("<w:jc\\s[^>]*w:val=\"center\"", Pattern.CASE_INSENSITIVE);
     private static final int CAPTION_LINK_DISTANCE = 2;
@@ -284,17 +288,21 @@ public class DocxLoadService {
         }
 
         int runCount = 0;
-        boolean anyBold = false;
-        boolean anyItalic = false;
+        boolean anySemiboldFromRuns = false;
         Map<String, Integer> fontCounts = new HashMap<>();
         Map<Double, Integer> sizeCounts = new HashMap<>();
         Map<String, Integer> colorCounts = new HashMap<>();
         boolean anyCaps = false;
         boolean anySmallCaps = false;
+        Boolean mergedExplicitBold = null;
+        Boolean mergedExplicitItalic = null;
         for (XWPFRun run : xp.getRuns()) {
             runCount++;
             String runFont = safeFontName(run);
             if (runFont != null) fontCounts.merge(runFont, 1, Integer::sum);
+            anySemiboldFromRuns = anySemiboldFromRuns
+                    || fontLooksSemibold(runFont)
+                    || fontLooksSemibold(parseRFontsAsciiFromRPr(run));
 
             Double runSize = safeFontSize(run);
             if (runSize != null) sizeCounts.merge(runSize, 1, Integer::sum);
@@ -302,10 +310,10 @@ public class DocxLoadService {
             String runColor = safeColor(run);
             if (runColor != null) colorCounts.merge(runColor, 1, Integer::sum);
 
-            anyBold = anyBold || run.isBold();
-            anyItalic = anyItalic || run.isItalic();
             if (run.getCTR().getRPr() != null) {
                 String rPrXml = run.getCTR().getRPr().xmlText();
+                mergedExplicitBold = mergeOnOffOr(mergedExplicitBold, boldFromRPrXmlFragment(rPrXml));
+                mergedExplicitItalic = mergeOnOffOr(mergedExplicitItalic, italicFromRPrXmlFragment(rPrXml));
                 if (rPrXml != null) {
                     if (OOXML_RPR_CAPS.matcher(rPrXml).find()) {
                         anyCaps = true;
@@ -316,9 +324,15 @@ public class DocxLoadService {
                 }
             }
         }
+        if (xp.getCTP().getPPr() != null && xp.getCTP().getPPr().getRPr() != null) {
+            String pRprXml = xp.getCTP().getPPr().getRPr().xmlText();
+            mergedExplicitBold = mergeOnOffOr(mergedExplicitBold, boldFromRPrXmlFragment(pRprXml));
+            mergedExplicitItalic = mergeOnOffOr(mergedExplicitItalic, italicFromRPrXmlFragment(pRprXml));
+        }
         if (runCount > 0) {
-            style.bold = anyBold;
-            style.italic = anyItalic;
+            // null — в прогонах нет явного w:b/w:i; тогда жирный/курсив подтягиваются из стиля (как в Word/LibreOffice).
+            style.bold = mergedExplicitBold;
+            style.italic = mergedExplicitItalic;
             style.fontName = mostFrequent(fontCounts);
             style.fontSizePt = mostFrequent(sizeCounts);
             style.colorHex = mostFrequent(colorCounts);
@@ -328,6 +342,8 @@ public class DocxLoadService {
 
         applyStyleFallbacks(xp, style);
         normalizeStyleValues(style, text);
+
+        boolean semiboldEmphasis = anySemiboldFromRuns || fontLooksSemibold(style.fontName);
 
         boolean runFontViolatesTnr = false;
         boolean runFontSizeViolates = false;
@@ -382,6 +398,8 @@ public class DocxLoadService {
             pageEnd = PageLocator.paragraphEndPage(xp, pageIndex);
         }
 
+        boolean ooxmlDiscretionaryHyphen = paragraphXmlHasDiscretionaryHyphenMarks(xp);
+
         return ParagraphInfo.builder()
                 .text(text)
                 .styleId(paragraphStyleId)
@@ -392,6 +410,7 @@ public class DocxLoadService {
                 .fontName(style.fontName)
                 .fontSizePt(style.fontSizePt)
                 .bold(style.bold)
+                .semiboldEmphasis(semiboldEmphasis)
                 .italic(style.italic)
                 .colorHex(style.colorHex)
                 .alignment(style.alignment)
@@ -402,6 +421,7 @@ public class DocxLoadService {
                 .pageEndIndex(pageEnd)
                 .inTable(inTable)
                 .containsFormula(hasFormula)
+                .ooxmlDiscretionaryHyphenMarks(ooxmlDiscretionaryHyphen)
                 .runFontViolatesTnr(runFontViolatesTnr)
                 .runFontSizeViolates(runFontSizeViolates)
                 .runColorViolatesBlack(runColorViolatesBlack)
@@ -438,6 +458,64 @@ public class DocxLoadService {
             return b;
         }
         return c;
+    }
+
+    /**
+     * «Полужирное» в смысле гарнитуры (Semibold, Demi) — не обязательно флаг {@code w:b}.
+     */
+    private static boolean fontLooksSemibold(String font) {
+        if (font == null || font.isBlank()) {
+            return false;
+        }
+        String f = font.toLowerCase(Locale.ROOT);
+        return f.contains("semibold")
+                || f.contains("semi bold")
+                || f.contains("semi-bold")
+                || f.contains("demibold")
+                || f.contains("demi bold");
+    }
+
+    /**
+     * Явный жирный в {@code w:rPr}/{@code w:pPr}: если тегов {@code w:b}/{@code w:bCs} нет — наследование из стиля, не «ложный false».
+     */
+    private static Boolean boldFromRPrXmlFragment(String xml) {
+        if (xml == null || (!containsTag(xml, "b") && !containsTag(xml, "bCs"))) {
+            return null;
+        }
+        Boolean b = containsTag(xml, "b") ? xmlOnOffFromTag(xml, "b") : null;
+        Boolean bCs = containsTag(xml, "bCs") ? xmlOnOffFromTag(xml, "bCs") : null;
+        if (b == null) {
+            return bCs;
+        }
+        if (bCs == null) {
+            return b;
+        }
+        return b || bCs;
+    }
+
+    private static Boolean italicFromRPrXmlFragment(String xml) {
+        if (xml == null || (!containsTag(xml, "i") && !containsTag(xml, "iCs"))) {
+            return null;
+        }
+        Boolean i = containsTag(xml, "i") ? xmlOnOffFromTag(xml, "i") : null;
+        Boolean iCs = containsTag(xml, "iCs") ? xmlOnOffFromTag(xml, "iCs") : null;
+        if (i == null) {
+            return iCs;
+        }
+        if (iCs == null) {
+            return i;
+        }
+        return i || iCs;
+    }
+
+    private static Boolean mergeOnOffOr(Boolean acc, Boolean next) {
+        if (next == null) {
+            return acc;
+        }
+        if (acc == null) {
+            return next;
+        }
+        return acc || next;
     }
 
     private static String parseRFontsAsciiFromRPr(XWPFRun run) {
@@ -480,6 +558,22 @@ public class DocxLoadService {
     private static boolean paragraphContainsOfficeMath(XWPFParagraph xp) {
         String xml = xp.getCTP().xmlText();
         return xml != null && (xml.contains("m:oMath") || xml.contains("oMathPara"));
+    }
+
+    /**
+     * Маркеры автоматического переноса в OOXML ({@code w:softHyphen}, {@code w:optionalHyphen}).
+     * Визуальный перенос текста по ширине страницы в файл не записывается — его нельзя восстановить из .docx без рендеринга.
+     */
+    private static boolean paragraphXmlHasDiscretionaryHyphenMarks(XWPFParagraph xp) {
+        if (xp == null || xp.getCTP() == null) {
+            return false;
+        }
+        String xml = xp.getCTP().xmlText();
+        if (xml == null || xml.isEmpty()) {
+            return false;
+        }
+        return OOXML_SOFT_HYPHEN.matcher(xml).find()
+                || OOXML_OPTIONAL_HYPHEN.matcher(xml).find();
     }
 
     private static void syncFigurePageIndices(List<FigureInfo> figures, List<ParagraphInfo> paragraphs) {
@@ -738,12 +832,36 @@ public class DocxLoadService {
             }
         }
 
-        List<String> notes = new ArrayList<>();
-        if (footerPage && Boolean.FALSE.equals(footerCenter)) {
-            notes.add("Номер страницы в подвале: абзац с полем PAGE не выровнен по центру (ожидается по центру внизу по ФТ-12).");
+        boolean periodAfterPageSuspected = false;
+        for (XWPFFooter f : footers) {
+            String rawXml = readPartXml(f);
+            if (footerXmlContainsPageField(rawXml) && footerXmlHasTrailingPeriodAfterPageField(rawXml)) {
+                periodAfterPageSuspected = true;
+                break;
+            }
         }
-        if (!footerPage && headerPage) {
-            notes.add("Поле номера страницы найдено в верхнем колонтитуле; по ФТ-12 номер должен быть внизу по центру.");
+
+        boolean defaultFooterHasPageField = false;
+        boolean firstPageFooterPresent = false;
+        boolean firstPageFooterHasPageField = false;
+        boolean evenPageFooterPresent = false;
+        boolean evenPageFooterHasPageField = false;
+        XWPFHeaderFooterPolicy policy = doc.getHeaderFooterPolicy();
+        if (policy != null) {
+            XWPFFooter def = policy.getDefaultFooter();
+            if (def != null) {
+                defaultFooterHasPageField = footerPartHasPageField(def);
+            }
+            XWPFFooter first = policy.getFirstPageFooter();
+            firstPageFooterPresent = first != null;
+            if (firstPageFooterPresent) {
+                firstPageFooterHasPageField = footerPartHasPageField(first);
+            }
+            XWPFFooter even = policy.getEvenPageFooter();
+            evenPageFooterPresent = even != null;
+            if (evenPageFooterPresent) {
+                evenPageFooterHasPageField = footerPartHasPageField(even);
+            }
         }
 
         return PageNumberingInfo.builder()
@@ -753,8 +871,31 @@ public class DocxLoadService {
                 .headerPartCount(headers.size())
                 .footerPageParagraphCentered(footerPage ? footerCenter : null)
                 .pageNumberRestartInSections(false)
-                .footerNotes(notes)
+                .footerTrailingPeriodAfterPageSuspected(periodAfterPageSuspected)
+                .defaultFooterHasPageField(defaultFooterHasPageField)
+                .firstPageFooterPresent(firstPageFooterPresent)
+                .firstPageFooterHasPageField(firstPageFooterHasPageField)
+                .evenPageFooterPresent(evenPageFooterPresent)
+                .evenPageFooterHasPageField(evenPageFooterHasPageField)
+                .footerNotes(new ArrayList<>())
                 .build();
+    }
+
+    /** Наличие поля PAGE в части подвала (XML + обход абзацев). */
+    private static boolean footerPartHasPageField(XWPFFooter f) {
+        if (f == null) {
+            return false;
+        }
+        String rawXml = readPartXml(f);
+        if (footerXmlContainsPageField(rawXml)) {
+            return true;
+        }
+        for (XWPFParagraph p : collectParagraphsDeep(f)) {
+            if (paragraphContainsPageNumberField(p)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static List<XWPFFooter> collectUniqueFooters(XWPFDocument doc) {
@@ -868,6 +1009,24 @@ public class DocxLoadService {
 
     private static boolean footerXmlHasCenterAlignment(String xml) {
         return OOXML_JC_CENTER.matcher(xml).find();
+    }
+
+    /**
+     * Отдельный прогон с одной точкой после области поля PAGE (типичный шаблон «номер.» в подвале).
+     */
+    private static boolean footerXmlHasTrailingPeriodAfterPageField(String xml) {
+        if (xml == null || xml.isEmpty() || !footerXmlContainsPageField(xml)) {
+            return false;
+        }
+        Matcher pageInstr = Pattern.compile("(?i)<w:instrText[^>]*>[^<]*\\bPAGE\\b").matcher(xml);
+        String tail;
+        if (pageInstr.find()) {
+            tail = xml.substring(pageInstr.start());
+        } else {
+            int lo = xml.toLowerCase(Locale.ROOT).indexOf("page");
+            tail = lo >= 0 ? xml.substring(lo) : xml;
+        }
+        return Pattern.compile("<w:t[^>]*>\\s*\\.\\s*</w:t>").matcher(tail).find();
     }
 
     private static double twipsToCm(Object twips) {
