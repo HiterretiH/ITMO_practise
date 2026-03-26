@@ -17,9 +17,13 @@
       }
 
       <p-fileUpload
+        #fileUpload
         name="file"
         [customUpload]="true"
         (uploadHandler)="onUpload($event)"
+        (onSelect)="onQueueChanged()"
+        (onClear)="onQueueChanged()"
+        (onRemove)="onQueueChanged()"
         [multiple]="false"
         accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
         [maxFileSize]="20000000"
@@ -29,6 +33,8 @@
         [cancelLabel]="'Отмена'"
         [showUploadButton]="true"
         [showCancelButton]="true"
+        [uploadButtonProps]="uploadButtonProps"
+        [cancelButtonProps]="cancelButtonProps"
         chooseIcon="pi pi-file-word"
         uploadIcon="pi pi-check"
         cancelIcon="pi pi-times"
