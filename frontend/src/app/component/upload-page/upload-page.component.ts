@@ -56,6 +56,27 @@ export class UploadPageComponent implements AfterViewInit {
     this.cancelButtonProps = inactive ? { severity: 'secondary' } : { severity: 'danger' };
   }
 
+  formatFileSizeMb(bytes: number): string {
+    const mb = bytes / (1024 * 1024);
+    return `${mb.toFixed(1)} МБ`;
+  }
+
+  removeQueuedFile(event: Event, file: File): void {
+    const fu = this.fileUpload;
+    if (!fu) {
+      return;
+    }
+    const queueIdx = fu.files.indexOf(file);
+    if (queueIdx !== -1) {
+      fu.remove(event, queueIdx);
+      return;
+    }
+    const uploadedIdx = fu.uploadedFiles.indexOf(file);
+    if (uploadedIdx !== -1) {
+      fu.removeUploadedFile(uploadedIdx);
+    }
+  }
+
   onUpload(event: FileUploadHandlerEvent): void {
     const file = event.files[0];
     if (!file) {

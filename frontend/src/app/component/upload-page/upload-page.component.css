@@ -75,3 +75,50 @@
   color: var(--p-text-muted-color);
   line-height: 1.4;
 }
+
+:host ::ng-deep .upload-dropzone .p-fileupload-content:has(.p-fileupload-file-list) {
+  min-height: auto;
+  align-items: stretch;
+  justify-content: flex-start;
+}
+
+:host ::ng-deep .upload-dropzone .p-fileupload-file-list {
+  width: 100%;
+}
+
+.upload-file-row {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  width: 100%;
+  padding: 0.5rem 0.25rem;
+  border-radius: var(--p-content-border-radius);
+}
+
+.upload-file-icon {
+  flex-shrink: 0;
+  font-size: 1.35rem;
+  color: var(--p-primary-color);
+  opacity: 0.95;
+}
+
+.upload-file-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 500;
+  color: var(--p-text-color);
+}
+
+.upload-file-size {
+  flex-shrink: 0;
+  font-size: 0.875rem;
+  color: var(--p-text-muted-color);
+  font-variant-numeric: tabular-nums;
+}
+
+.upload-file-row .p-button {
+  flex-shrink: 0;
+}

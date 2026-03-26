@@ -47,6 +47,23 @@
             <p class="upload-dropzone-sub">или выберите его кнопкой «Выбрать файл» выше</p>
           </div>
         </ng-template>
+
+        <ng-template pTemplate="file" let-file>
+          <div class="upload-file-row p-fileupload-file">
+            <i class="pi pi-file-word upload-file-icon" aria-hidden="true"></i>
+            <span class="upload-file-name" [title]="file.name">{{ file.name }}</span>
+            <span class="upload-file-size">{{ formatFileSizeMb(file.size) }}</span>
+            <p-button
+              type="button"
+              icon="pi pi-times"
+              [text]="true"
+              [rounded]="true"
+              severity="danger"
+              [attr.aria-label]="'Удалить ' + file.name"
+              (onClick)="removeQueuedFile($event, file)"
+            />
+          </div>
+        </ng-template>
       </p-fileUpload>
 
       <p class="hint">Поддерживается только .docx. Максимальный размер — 50 МБ.</p>
