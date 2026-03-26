@@ -17,15 +17,19 @@
         </div>
       </p-card>
     } @else {
-      <p-card header="Результаты проверки" styleClass="results-shell">
-        <div class="toolbar">
-          <p-button
-            label="Новая проверка"
-            icon="pi pi-arrow-left"
-            [outlined]="true"
-            severity="contrast"
-            (onClick)="newCheck()"
-          />
+      <p-card styleClass="results-shell">
+        <div class="results-header">
+          <div class="results-header__left">
+            <p-button
+              label="Новая проверка"
+              icon="pi pi-arrow-left"
+              [outlined]="true"
+              severity="contrast"
+              (onClick)="newCheck()"
+            />
+          </div>
+          <h2 class="results-header__title">Результаты проверки</h2>
+          <div class="results-header__right" aria-hidden="true"></div>
         </div>
 
         <p-card styleClass="nested-card summary-card">
