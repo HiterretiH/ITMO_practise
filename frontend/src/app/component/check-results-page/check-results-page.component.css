@@ -8,6 +8,12 @@
   margin: 0 auto;
 }
 
+:host ::ng-deep .results-shell .p-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
 .toolbar {
   margin-bottom: 0.75rem;
 }

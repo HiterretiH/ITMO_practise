@@ -3,7 +3,7 @@
 export interface ValidationResult {
   document_info: DocumentInfo;
   summary: ValidationSummary;
-  errors: ErrorItem[];
+  errors?: ErrorItem[];
 }
 
 export interface DocumentInfo {

@@ -1,7 +1,7 @@
 <app-header></app-header>
 <p-toast />
 
-<div class="page">
+<main class="page">
   <div class="page-inner">
     @if (!result) {
       <p-card header="Результаты проверки">
@@ -9,7 +9,11 @@
           Здесь отображается отчёт после проверки документа. Загрузите файл .doc или .docx на главной странице.
         </p>
         <div class="actions-row">
-          <p-button label="Перейти к загрузке" icon="pi pi-upload" routerLink="/" />
+          <p-button
+            label="Перейти к загрузке"
+            icon="pi pi-upload"
+            (onClick)="goToUpload()"
+          />
         </div>
       </p-card>
     } @else {
@@ -72,7 +76,12 @@
         </p-card>
 
         <p-card header="Список замечаний" styleClass="nested-card">
-          <p-table [value]="result.errors" [paginator]="true" [rows]="10" [responsiveLayout]="'scroll'">
+          <p-table
+            [value]="result.errors ?? []"
+            [paginator]="true"
+            [rows]="10"
+            responsiveLayout="scroll"
+          >
             <ng-template pTemplate="header">
               <tr>
                 <th style="min-width: 9rem">Тип</th>
@@ -83,7 +92,7 @@
             </ng-template>
             <ng-template pTemplate="body" let-row>
               <tr>
-                <td>{{ row.type }}</td>
+                <td>{{ row.type ?? '—' }}</td>
                 <td>
                   <p-tag
                     [value]="severityLabel(row.severity)"
@@ -125,4 +134,4 @@
       </p-card>
     }
   </div>
-</div>
+</main>

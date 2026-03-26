@@ -2,12 +2,11 @@ import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, inject, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { CheckboxModule } from 'primeng/checkbox';
-import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { ToastModule } from 'primeng/toast';
@@ -23,7 +22,6 @@ import { ValidationSessionService } from '../../service/validation-session.servi
   imports: [
     CommonModule,
     FormsModule,
-    RouterLink,
     HeaderComponent,
     ToastModule,
     CardModule,
@@ -31,7 +29,6 @@ import { ValidationSessionService } from '../../service/validation-session.servi
     TableModule,
     TagModule,
     CheckboxModule,
-    ProgressSpinnerModule,
   ],
   templateUrl: './check-results-page.component.html',
   styleUrl: './check-results-page.component.css',
@@ -83,6 +80,10 @@ export class CheckResultsPageComponent implements OnInit {
 
   newCheck(): void {
     this.session.clear();
+    void this.router.navigate(['/']);
+  }
+
+  goToUpload(): void {
     void this.router.navigate(['/']);
   }
 
