@@ -49,6 +49,13 @@ export class UploadPageComponent implements AfterViewInit {
     queueMicrotask(() => this.syncUploadButtonColors());
   }
 
+  openFileChooser(): void {
+    if (this.loading) {
+      return;
+    }
+    this.fileUpload?.choose();
+  }
+
   private syncUploadButtonColors(): void {
     const hasFiles = this.fileUpload?.hasFiles?.() ?? false;
     const inactive = this.loading || !hasFiles;

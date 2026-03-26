@@ -43,6 +43,11 @@
     background 0.15s ease;
 }
 
+:host ::ng-deep .upload-dropzone .p-fileupload-content:has(.upload-dropzone-inner) {
+  align-items: stretch;
+  justify-content: stretch;
+}
+
 :host ::ng-deep .upload-dropzone .p-fileupload-content[data-p-highlight='true'],
 :host ::ng-deep .upload-dropzone .p-fileupload-content.p-fileupload-highlight {
   border-color: var(--p-primary-color);
@@ -50,7 +55,28 @@
 }
 
 .upload-dropzone-inner {
+  flex: 1;
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 100%;
+  box-sizing: border-box;
   text-align: center;
+  cursor: pointer;
+  border-radius: calc(var(--p-content-border-radius) - 2px);
+  outline: none;
+}
+
+.upload-dropzone-inner:focus-visible {
+  outline: 2px solid var(--p-primary-color);
+  outline-offset: 2px;
+}
+
+.upload-dropzone-copy {
+  width: 100%;
   max-width: 26rem;
 }
 

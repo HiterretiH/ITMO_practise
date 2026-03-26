@@ -43,10 +43,20 @@
         cancelIcon="pi pi-times"
       >
         <ng-template pTemplate="empty">
-          <div class="upload-dropzone-inner">
-            <i class="pi pi-cloud-upload upload-dropzone-icon" aria-hidden="true"></i>
-            <p class="upload-dropzone-title">Перетащите файл .doc или .docx в эту область</p>
-            <p class="upload-dropzone-sub">или выберите его кнопкой «Выбрать файл» выше</p>
+          <div
+            class="upload-dropzone-inner"
+            role="button"
+            tabindex="0"
+            [attr.aria-label]="'Выбрать файл с компьютера'"
+            (click)="openFileChooser()"
+            (keydown.enter)="openFileChooser()"
+            (keydown.space)="$event.preventDefault(); openFileChooser()"
+          >
+            <div class="upload-dropzone-copy">
+              <i class="pi pi-cloud-upload upload-dropzone-icon" aria-hidden="true"></i>
+              <p class="upload-dropzone-title">Перетащите файл .doc или .docx в эту область</p>
+              <p class="upload-dropzone-sub">или выберите его кнопкой «Выбрать файл» выше</p>
+            </div>
           </div>
         </ng-template>
 
