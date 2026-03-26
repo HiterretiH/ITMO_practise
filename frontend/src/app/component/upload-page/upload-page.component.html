@@ -5,7 +5,7 @@
   <div class="page-inner">
     <p-card header="Проверка документа ВКР">
       <p class="page-lead">
-        Загрузите файл в формате .docx. Сервис проверит структуру и оформление по требованиям ИТМО и покажет
+        Загрузите файл в формате .doc или .docx. Сервис проверит структуру и оформление по требованиям ИТМО и покажет
         подробный отчёт.
       </p>
 
@@ -26,7 +26,9 @@
         (onClear)="onQueueChanged()"
         (onRemove)="onQueueChanged()"
         [multiple]="false"
-        accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        accept=".doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        invalidFileTypeMessageSummary="Неверный формат файла."
+        invalidFileTypeMessageDetail="Нужен .doc или .docx."
         [maxFileSize]="20000000"
         [disabled]="loading"
         [chooseLabel]="'Выбрать файл'"
@@ -43,7 +45,7 @@
         <ng-template pTemplate="empty">
           <div class="upload-dropzone-inner">
             <i class="pi pi-cloud-upload upload-dropzone-icon" aria-hidden="true"></i>
-            <p class="upload-dropzone-title">Перетащите файл .docx в эту область</p>
+            <p class="upload-dropzone-title">Перетащите файл .doc или .docx в эту область</p>
             <p class="upload-dropzone-sub">или выберите его кнопкой «Выбрать файл» выше</p>
           </div>
         </ng-template>
@@ -66,7 +68,7 @@
         </ng-template>
       </p-fileUpload>
 
-      <p class="hint">Поддерживается только .docx. Максимальный размер — 50 МБ.</p>
+      <p class="hint">Поддерживаются только .doc и .docx. Максимальный размер — 50 МБ.</p>
     </p-card>
   </div>
 </div>
