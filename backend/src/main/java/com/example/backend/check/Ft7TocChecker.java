@@ -3,6 +3,7 @@ package com.example.backend.check;
 import com.example.backend.domain.ParagraphInfo;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
@@ -39,6 +40,138 @@ public final class Ft7TocChecker {
     private static final Pattern TOC_STYLE_ID = Pattern.compile("(?i)^TOC(\\d+)$");
 
     private Ft7TocChecker() {
+    }
+
+    /**
+     * Индексы абзацев, входящих в блок оглавления по той же логике, что и {@link #check}.
+     * Для ФТ-15 и др.: не считать такие абзацы заголовками приложений в основном тексте.
+     */
+    public static Set<Integer> indicesOfParagraphsInTocBlock(List<ParagraphInfo> paragraphs) {
+        if (paragraphs == null || paragraphs.isEmpty()) {
+            return Set.of();
+        }
+        List<TocParsedLine> byStyle = collectByTocStyles(paragraphs);
+        List<TocParsedLine> byHeuristic = collectLongestContiguousHeuristic(paragraphs);
+
+        if (byHeuristic.size() > byStyle.size() && !byHeuristic.isEmpty()) {
+            return indicesFromHeuristicBounds(paragraphs);
+        }
+        if (!byStyle.isEmpty()) {
+            return indicesFromStyleTocBlock(paragraphs);
+        }
+        if (!byHeuristic.isEmpty()) {
+            return indicesFromHeuristicBounds(paragraphs);
+        }
+        return Set.of();
+    }
+
+    /**
+     * Все абзацы оглавления для исключения из проверок «как в тексте»: объединение
+     * {@link #indicesOfParagraphsInTocBlock} и непрерывного блока сразу после заголовка
+     * «СОДЕРЖАНИЕ»/«ОГЛАВЛЕНИЕ» до первого структурного заголовка раздела (та же граница, что у поля оглавления в ФТ-7).
+     * Последний охватывает строки вида «ПРИЛОЖЕНИЕ А» в содержании даже без номера страницы в том же абзаце.
+     */
+    public static Set<Integer> indicesOfParagraphsInTocSection(List<ParagraphInfo> paragraphs) {
+        if (paragraphs == null || paragraphs.isEmpty()) {
+            return Set.of();
+        }
+        Set<Integer> out = new HashSet<>(indicesOfParagraphsInTocBlock(paragraphs));
+        out.addAll(indicesOfParagraphsInTocBodyAfterHeading(paragraphs));
+        return out;
+    }
+
+    /**
+     * Абзацы с индексами (tocHeadingIndex + 1) … до первого структурного заголовка раздела после оглавления
+     * (не включая этот заголовок).
+     */
+    public static Set<Integer> indicesOfParagraphsInTocBodyAfterHeading(List<ParagraphInfo> paragraphs) {
+        if (paragraphs == null || paragraphs.isEmpty()) {
+            return Set.of();
+        }
+        int h = findTocHeadingIndex(paragraphs);
+        if (h < 0) {
+            return Set.of();
+        }
+        Set<Integer> out = new HashSet<>();
+        for (int i = h + 1; i < paragraphs.size(); i++) {
+            ParagraphInfo p = paragraphs.get(i);
+            if (shouldStopTocBlock(p)) {
+                break;
+            }
+            out.add(i);
+        }
+        return out;
+    }
+
+    private static Set<Integer> indicesFromHeuristicBounds(List<ParagraphInfo> paragraphs) {
+        int[] bounds = heuristicTocRunBounds(paragraphs);
+        if (bounds == null) {
+            return Set.of();
+        }
+        Set<Integer> s = new HashSet<>();
+        for (int i = bounds[0]; i < bounds[1]; i++) {
+            s.add(i);
+        }
+        return s;
+    }
+
+    private static Set<Integer> indicesFromStyleTocBlock(List<ParagraphInfo> paragraphs) {
+        int tocHeadingIdx = findTocHeadingIndex(paragraphs);
+        int lineStart;
+        if (tocHeadingIdx >= 0) {
+            lineStart = tocHeadingIdx + 1;
+        } else {
+            int ft = findFirstTocStyledParagraphIndex(paragraphs);
+            if (ft < 0) {
+                return Set.of();
+            }
+            lineStart = ft;
+        }
+        Set<Integer> s = new HashSet<>();
+        for (int i = lineStart; i < paragraphs.size(); i++) {
+            ParagraphInfo p = paragraphs.get(i);
+            if (shouldStopTocBlock(p)) {
+                break;
+            }
+            String raw = p.getText();
+            if (raw == null || raw.trim().isEmpty()) {
+                continue;
+            }
+            int tocLevel = tocParagraphStyleLevel(p);
+            if (tocLevel < 0) {
+                break;
+            }
+            s.add(i);
+        }
+        return s;
+    }
+
+    /**
+     * Нормализованные заголовки строк оглавления (без «СОДЕРЖАНИЕ»/«ОГЛАВЛЕНИЕ») — для ФТ-16.
+     */
+    public static List<String> tocLineTitleKeys(List<ParagraphInfo> paragraphs) {
+        if (paragraphs == null || paragraphs.isEmpty()) {
+            return List.of();
+        }
+        TocBlock block = resolveTocBlock(paragraphs);
+        if (block == null || block.lines().isEmpty()) {
+            return List.of();
+        }
+        List<String> out = new ArrayList<>();
+        for (TocParsedLine line : block.lines()) {
+            String key = normalizeCompareKey(line.titleText());
+            if (!key.isEmpty() && !TOC_SECTION_TITLES.contains(key)) {
+                out.add(key);
+            }
+        }
+        return out;
+    }
+
+    /**
+     * То же сопоставление заголовков, что при проверке соответствия оглавления тексту.
+     */
+    public static boolean titlesMatchTocToBody(String tocKey, String bodyKey) {
+        return titlesMatch(tocKey, bodyKey);
     }
 
     public static List<String> check(List<ParagraphInfo> paragraphs) {
@@ -211,6 +344,8 @@ public final class Ft7TocChecker {
                     j++;
                 } else if (isTocNoiseOrGapParagraph(p)) {
                     j++;
+                } else if (j > start && isAppendixTocLineWithoutPageNumber(p, paragraphs.get(j - 1))) {
+                    j++;
                 } else {
                     break;
                 }
@@ -242,6 +377,40 @@ public final class Ft7TocChecker {
             j++;
         }
         return new int[] {bestStart, j};
+    }
+
+    /**
+     * Строка вида «ПРИЛОЖЕНИЕ X» без номера в том же абзаце (поле TOC), сразу после другой строки оглавления
+     * на той же странице.
+     */
+    private static boolean isAppendixTocLineWithoutPageNumber(ParagraphInfo p, ParagraphInfo prev) {
+        if (prev == null) {
+            return false;
+        }
+        Integer pp = p.getPageIndex();
+        Integer pv = prev.getPageIndex();
+        if (pp != null && pv != null && !pp.equals(pv)) {
+            return false;
+        }
+        String raw = p.getText();
+        if (raw == null || raw.isBlank()) {
+            return false;
+        }
+        String norm = normalizeTitle(raw);
+        if (!norm.matches("^ПРИЛОЖЕНИЕ\\s+[А-ЯA-Z].*")) {
+            return false;
+        }
+        if (norm.length() > 80) {
+            return false;
+        }
+        String trimmed = raw.replace('\u00A0', ' ').replace("\u200B", "").trim();
+        if (LINE_WITH_LEADER.matcher(trimmed).matches()) {
+            return false;
+        }
+        if (LINE_TAIL_PAGE.matcher(trimmed).matches()) {
+            return false;
+        }
+        return true;
     }
 
     private static List<TocParsedLine> collectLongestContiguousHeuristic(List<ParagraphInfo> paragraphs) {

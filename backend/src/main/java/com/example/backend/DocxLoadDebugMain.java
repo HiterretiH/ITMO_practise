@@ -11,6 +11,10 @@ import com.example.backend.check.Ft11HeadingFormattingChecker;
 import com.example.backend.check.Ft12PageNumberingChecker;
 import com.example.backend.check.Ft13FigureCaptionChecker;
 import com.example.backend.check.Ft14TableCaptionChecker;
+import com.example.backend.check.Ft15AppendixChecker;
+import com.example.backend.check.Ft16OptionalStructuralElementsChecker;
+import com.example.backend.check.Ft17AbbreviationsListChecker;
+import com.example.backend.check.Ft19FormulasChecker;
 import com.example.backend.domain.DocumentPageSettings;
 import com.example.backend.domain.DocumentStructure;
 import com.example.backend.domain.FigureInfo;
@@ -247,6 +251,31 @@ public class DocxLoadDebugMain {
         List<String> ft14 = Ft14TableCaptionChecker.check(tables, paragraphs);
         log.info("ФТ-14 (п. 4.6.3: название «Таблица N – …» над таблицей слева; настоящая таблица Word), замечаний: {}", ft14.size());
         for (String line : ft14) {
+            log.info("  {}", line);
+        }
+
+        List<String> ft15 = Ft15AppendixChecker.check(paragraphs);
+        log.info("ФТ-15 (п. 4.11.2: приложения; «ПРИЛОЖЕНИЕ А» наверху страницы, по центру), замечаний: {}", ft15.size());
+        for (String line : ft15) {
+            log.info("  {}", line);
+        }
+
+        List<String> ft16 = Ft16OptionalStructuralElementsChecker.check(paragraphs);
+        log.info("ФТ-16 (п. 3.2: доп. разделы по содержанию — список сокращений, термины, иллюстративный материал), замечаний: {}", ft16.size());
+        for (String line : ft16) {
+            log.info("  {}", line);
+        }
+
+        log.info("{}", Ft17AbbreviationsListChecker.formatSectionDiagnostics(paragraphs, tables));
+        List<String> ft17 = Ft17AbbreviationsListChecker.check(paragraphs, tables);
+        log.info("ФТ-17 (п. 4.8.4: список сокращений — один из двух вариантов: абзацы или таблица 2×N), замечаний: {}", ft17.size());
+        for (String line : ft17) {
+            log.info("  {}", line);
+        }
+
+        List<String> ft19 = Ft19FormulasChecker.check(paragraphs, structure.getFullText());
+        log.info("ФТ-19 (п. 4.7: формулы — ссылки, где, единицы, неразрывный пробел), замечаний: {}", ft19.size());
+        for (String line : ft19) {
             log.info("  {}", line);
         }
 

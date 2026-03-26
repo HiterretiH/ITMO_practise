@@ -35,6 +35,12 @@ public class ParagraphInfo {
 
     private boolean inTable;
 
+    /** 0-based номер строки таблицы Word (только при {@code inTable}). */
+    private Integer tableRowIndex;
+
+    /** 0-based номер столбца таблицы Word (только при {@code inTable}). */
+    private Integer tableColumnIndex;
+
     private boolean containsFormula;
 
     private boolean ooxmlDiscretionaryHyphenMarks;

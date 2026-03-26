@@ -11,6 +11,7 @@ import org.apache.poi.hwpf.usermodel.Paragraph;
 import org.apache.poi.hwpf.usermodel.Range;
 import org.apache.poi.xwpf.model.XWPFHeaderFooterPolicy;
 import org.apache.poi.xwpf.usermodel.*;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTJc;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTPageMar;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTPageNumber;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTPageSz;
@@ -109,18 +110,16 @@ public class DocxLoadService {
                     }
                     paraIndex++;
                 } else if (element instanceof XWPFTable table) {
+                    int tableParagraphStart = paraIndex;
                     String tableCaption = findNearbyTableCaption(bodyParagraphs, captions, paraIndex);
                     int tablePage = nextParagraphStartPage;
-                    tableInfos.add(TableInfo.builder()
-                            .caption(tableCaption)
-                            .paragraphIndex(paraIndex)
-                            .pageIndex(tablePage)
-                            .build());
+                    int rowIndex = 0;
                     for (XWPFTableRow row : table.getRows()) {
+                        int colIndex = 0;
                         for (XWPFTableCell cell : row.getTableCells()) {
                             for (XWPFParagraph p : cell.getParagraphs()) {
                                 int startPage = nextParagraphStartPage;
-                                ParagraphInfo pi = mapParagraph(p, startPage, true);
+                                ParagraphInfo pi = mapParagraph(p, startPage, true, rowIndex, colIndex);
                                 nextParagraphStartPage = PageLocator.nextParagraphStartAfter(p, startPage);
                                 paragraphs.add(pi);
                                 if (p.getCTP().getPPr() != null && p.getCTP().getPPr().isSetSectPr()) {
@@ -130,8 +129,19 @@ public class DocxLoadService {
                                 if (pi.getText() != null) fullText.append(pi.getText()).append(" ");
                                 paraIndex++;
                             }
+                            colIndex++;
                         }
+                        rowIndex++;
                     }
+                    int tableParagraphEndExclusive = paraIndex;
+                    tableInfos.add(TableInfo.builder()
+                            .caption(tableCaption)
+                            .paragraphIndex(tableParagraphStart)
+                            .paragraphIndexEndExclusive(tableParagraphEndExclusive)
+                            .pageIndex(tablePage)
+                            .columnCount(tableColumnCount(table))
+                            .rowCount(table.getRows() == null ? 0 : table.getRows().size())
+                            .build());
                 } else if (element instanceof XWPFSDT sdt) {
                     int[] idx = new int[] {paraIndex, nextParagraphStartPage};
                     appendSdtContent(sdt, bodyIndex, paragraphs, bodyParagraphs, captions, fullText, tableInfos, idx,
@@ -236,18 +246,16 @@ public class DocxLoadService {
                 }
                 idx[0]++;
             } else if (o instanceof XWPFTable table) {
+                int tableParagraphStart = idx[0];
                 String tableCaption = findNearbyTableCaption(bodyParagraphs, captions, idx[0]);
                 int tablePage = idx[1];
-                tableInfos.add(TableInfo.builder()
-                        .caption(tableCaption)
-                        .paragraphIndex(idx[0])
-                        .pageIndex(tablePage)
-                        .build());
+                int rowIndex = 0;
                 for (XWPFTableRow row : table.getRows()) {
+                    int colIndex = 0;
                     for (XWPFTableCell cell : row.getTableCells()) {
                         for (XWPFParagraph p : cell.getParagraphs()) {
                             int startPage = idx[1];
-                            ParagraphInfo pi = mapParagraph(p, startPage, true);
+                            ParagraphInfo pi = mapParagraph(p, startPage, true, rowIndex, colIndex);
                             idx[1] = PageLocator.nextParagraphStartAfter(p, startPage);
                             paragraphs.add(pi);
                             if (p.getCTP().getPPr() != null && p.getCTP().getPPr().isSetSectPr()) {
@@ -259,8 +267,19 @@ public class DocxLoadService {
                             }
                             idx[0]++;
                         }
+                        colIndex++;
                     }
+                    rowIndex++;
                 }
+                int tableParagraphEndExclusive = idx[0];
+                tableInfos.add(TableInfo.builder()
+                        .caption(tableCaption)
+                        .paragraphIndex(tableParagraphStart)
+                        .paragraphIndexEndExclusive(tableParagraphEndExclusive)
+                        .pageIndex(tablePage)
+                        .columnCount(tableColumnCount(table))
+                        .rowCount(table.getRows() == null ? 0 : table.getRows().size())
+                        .build());
             } else if (o instanceof XWPFSDT nested) {
                 appendSdtContent(nested, bodyIndexForBlock, paragraphs, bodyParagraphs, captions, fullText, tableInfos, idx,
                         collectedSectPrs, sectPrParagraphIndices);
@@ -269,13 +288,15 @@ public class DocxLoadService {
     }
 
     private ParagraphInfo mapParagraph(XWPFParagraph xp, Integer pageIndex, boolean inTable) {
+        return mapParagraph(xp, pageIndex, inTable, null, null);
+    }
+
+    private ParagraphInfo mapParagraph(
+            XWPFParagraph xp, Integer pageIndex, boolean inTable, Integer tableRowIndex, Integer tableColumnIndex) {
         String text = xp.getText();
         boolean hasFormula = paragraphContainsOfficeMath(xp);
         ParagraphStyleSnapshot style = new ParagraphStyleSnapshot();
 
-        if (xp.getAlignment() != null) {
-            style.alignment = xp.getAlignment().name();
-        }
         if (xp.getCTP().getPPr() != null) {
             if (xp.getCTP().getPPr().getSpacing() != null) {
                 BigInteger line = toBigInteger(xp.getCTP().getPPr().getSpacing().getLine());
@@ -343,6 +364,7 @@ public class DocxLoadService {
         }
 
         applyStyleFallbacks(xp, style);
+        applyDirectParagraphJcAlignment(xp, style);
         normalizeStyleValues(style, text);
 
         boolean semiboldEmphasis = anySemiboldFromRuns || fontLooksSemibold(style.fontName);
@@ -422,6 +444,8 @@ public class DocxLoadService {
                 .pageIndex(pageIndex)
                 .pageEndIndex(pageEnd)
                 .inTable(inTable)
+                .tableRowIndex(tableRowIndex)
+                .tableColumnIndex(tableColumnIndex)
                 .containsFormula(hasFormula)
                 .ooxmlDiscretionaryHyphenMarks(ooxmlDiscretionaryHyphen)
                 .runFontViolatesTnr(runFontViolatesTnr)
@@ -438,6 +462,13 @@ public class DocxLoadService {
             return null;
         }
         return values.stream().limit(max).collect(Collectors.joining(", "));
+    }
+
+    private static int tableColumnCount(XWPFTable table) {
+        if (table == null || table.getRows() == null || table.getRows().isEmpty()) {
+            return 0;
+        }
+        return table.getRow(0).getTableCells().size();
     }
 
     private static String firstNonBlank(String... parts) {
@@ -594,6 +625,40 @@ public class DocxLoadService {
         if (paragraph.getDocument() == null || paragraph.getDocument().getStyles() == null) return;
         applyParagraphStyleFallback(paragraph, out);
         applyDocDefaultsFallback(paragraph, out);
+    }
+
+    /**
+     * Явный {@code w:jc} в {@code w:pPr} абзаца перекрывает выравнивание из стиля (как в Word).
+     * Раньше бралось {@link XWPFParagraph#getAlignment()} до подстановки стиля — из стиля не подтягивался {@code jc}.
+     */
+    private static void applyDirectParagraphJcAlignment(XWPFParagraph xp, ParagraphStyleSnapshot out) {
+        if (xp.getCTP().getPPr() == null || !xp.getCTP().getPPr().isSetJc()) {
+            return;
+        }
+        CTJc jc = xp.getCTP().getPPr().getJc();
+        if (jc == null || jc.getVal() == null) {
+            return;
+        }
+        String mapped = mapStJcValToAlignmentString(jc.getVal().toString());
+        if (mapped != null && !mapped.isBlank()) {
+            out.alignment = mapped;
+        }
+    }
+
+    /** Значение {@code w:jc/@w:val} (OOXML) → строка для {@link ParagraphInfo#getAlignment()}. */
+    private static String mapStJcValToAlignmentString(String jcVal) {
+        if (jcVal == null || jcVal.isBlank()) {
+            return null;
+        }
+        String u = jcVal.trim().toUpperCase(Locale.ROOT);
+        return switch (u) {
+            case "LEFT", "START" -> "LEFT";
+            case "RIGHT", "END" -> "RIGHT";
+            case "CENTER" -> "CENTER";
+            case "BOTH" -> "BOTH";
+            case "DISTRIBUTE", "THAI_DISTRIBUTE", "MEDIUM_KASHIDA", "HIGH_KASHIDA", "LOW_KASHIDA", "NUM_TAB" -> "DISTRIBUTE";
+            default -> u;
+        };
     }
 
     private void applyParagraphStyleFallback(XWPFParagraph paragraph, ParagraphStyleSnapshot out) {
