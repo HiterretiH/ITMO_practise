@@ -19,6 +19,7 @@
       <p-fileUpload
         #fileUpload
         name="file"
+        styleClass="upload-dropzone"
         [customUpload]="true"
         (uploadHandler)="onUpload($event)"
         (onSelect)="onQueueChanged()"
@@ -38,7 +39,15 @@
         chooseIcon="pi pi-file-word"
         uploadIcon="pi pi-check"
         cancelIcon="pi pi-times"
-      />
+      >
+        <ng-template pTemplate="empty">
+          <div class="upload-dropzone-inner">
+            <i class="pi pi-cloud-upload upload-dropzone-icon" aria-hidden="true"></i>
+            <p class="upload-dropzone-title">Перетащите файл .docx в эту область</p>
+            <p class="upload-dropzone-sub">или выберите его кнопкой «Выбрать файл» выше</p>
+          </div>
+        </ng-template>
+      </p-fileUpload>
 
       <p class="hint">Поддерживается только .docx. Максимальный размер — 50 МБ.</p>
     </p-card>

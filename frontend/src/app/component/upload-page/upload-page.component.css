@@ -28,3 +28,50 @@
   font-size: 0.85rem;
   color: var(--p-text-muted-color);
 }
+
+:host ::ng-deep .upload-dropzone .p-fileupload-content {
+  min-height: 220px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  border: 2px dashed var(--p-surface-300);
+  border-radius: var(--p-content-border-radius);
+  background: var(--p-surface-50);
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease;
+}
+
+:host ::ng-deep .upload-dropzone .p-fileupload-content[data-p-highlight='true'],
+:host ::ng-deep .upload-dropzone .p-fileupload-content.p-fileupload-highlight {
+  border-color: var(--p-primary-color);
+  background: color-mix(in srgb, var(--p-primary-color) 8%, var(--p-surface-0));
+}
+
+.upload-dropzone-inner {
+  text-align: center;
+  max-width: 26rem;
+}
+
+.upload-dropzone-icon {
+  display: block;
+  font-size: 2.75rem;
+  color: var(--p-primary-color);
+  margin-bottom: 0.75rem;
+  opacity: 0.9;
+}
+
+.upload-dropzone-title {
+  margin: 0 0 0.35rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--p-text-color);
+}
+
+.upload-dropzone-sub {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--p-text-muted-color);
+  line-height: 1.4;
+}
