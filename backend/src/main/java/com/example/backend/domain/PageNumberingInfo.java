@@ -36,4 +36,8 @@ public class PageNumberingInfo {
 
     @Builder.Default
     private List<String> footerNotes = new ArrayList<>();
+
+    /** Текст каждого уникального подвала, как отдаёт POI (шаблон с полем PAGE, не «по страницам»). */
+    @Builder.Default
+    private List<String> footerPartCombinedTexts = new ArrayList<>();
 }

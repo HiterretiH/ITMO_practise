@@ -39,7 +39,7 @@ public final class Ft12PageNumberingChecker {
     }
 
     /**
-     * @param sectPrParagraphIndices индексы абзацев с {@code w:sectPr} (как в {@link com.example.backend.model.domain.DocumentStructure})
+     * @param sectPrParagraphIndices индексы абзацев с {@code w:sectPr} (как в {@link com.example.backend.domain.DocumentStructure})
      */
     public static List<String> check(
             DocumentPageSettings pageSettings,

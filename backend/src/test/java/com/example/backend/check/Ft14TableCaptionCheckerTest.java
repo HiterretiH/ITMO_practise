@@ -1,7 +1,7 @@
 package com.example.backend.check;
 
-import com.example.backend.model.domain.ParagraphInfo;
-import com.example.backend.model.domain.TableInfo;
+import com.example.backend.domain.ParagraphInfo;
+import com.example.backend.domain.TableInfo;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
