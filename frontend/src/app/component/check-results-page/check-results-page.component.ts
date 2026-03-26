@@ -109,6 +109,22 @@ export class CheckResultsPageComponent implements OnInit {
   }
 
   severityLabel(s: string | undefined): string {
-    return s === 'critical' ? 'Критично' : 'Замечание';
+    if (s === 'critical') {
+      return 'Критично';
+    }
+    if (s === 'warning') {
+      return 'Замечание';
+    }
+    return 'Важность не указана';
+  }
+
+  severityIconClass(s: string | undefined): string {
+    if (s === 'critical') {
+      return 'pi pi-times-circle severity-icon severity-icon--critical';
+    }
+    if (s === 'warning') {
+      return 'pi pi-exclamation-circle severity-icon severity-icon--warning';
+    }
+    return 'pi pi-minus-circle severity-icon severity-icon--unknown';
   }
 }

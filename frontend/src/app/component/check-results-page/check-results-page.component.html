@@ -95,6 +95,7 @@
 
         <p-card header="Список замечаний" styleClass="nested-card">
           <p-table
+            styleClass="errors-table"
             [value]="result.errors ?? []"
             [paginator]="true"
             [rows]="10"
@@ -102,34 +103,27 @@
           >
             <ng-template pTemplate="header">
               <tr>
-                <th style="min-width: 9rem">Тип</th>
-                <th style="min-width: 7rem">Важность</th>
-                <th style="min-width: 10rem">Место</th>
-                <th>Описание</th>
+                <th scope="col" class="errors-col-severity">
+                  <span class="sr-only">Важность</span>
+                </th>
+                <th scope="col" class="errors-col-desc">Описание</th>
+                <th scope="col" class="errors-col-place">Место</th>
               </tr>
             </ng-template>
             <ng-template pTemplate="body" let-row>
               <tr>
-                <td>{{ row.type ?? '—' }}</td>
-                <td>
-                  <p-tag
-                    [value]="severityLabel(row.severity)"
-                    [severity]="row.severity === 'critical' ? 'danger' : 'warn'"
-                  />
+                <td class="errors-col-severity">
+                  <div
+                    class="severity-icon-wrap"
+                    [class.severity-icon-wrap--critical]="row.severity === 'critical'"
+                    [class.severity-icon-wrap--warning]="row.severity === 'warning'"
+                    [attr.aria-label]="severityLabel(row.severity)"
+                    [attr.title]="severityLabel(row.severity)"
+                  >
+                    <i [class]="severityIconClass(row.severity)" aria-hidden="true"></i>
+                  </div>
                 </td>
-                <td>
-                  @if (row.location) {
-                    <span class="place">
-                      стр. {{ row.location.page ?? '—' }}, абз. {{ row.location.paragraph ?? '—' }}
-                      @if (row.location.element) {
-                        <span class="muted"> · {{ row.location.element }}</span>
-                      }
-                    </span>
-                  } @else {
-                    —
-                  }
-                </td>
-                <td>
+                <td class="errors-col-desc">
                   <div class="desc">{{ row.description }}</div>
                   @if (row.expected || row.actual) {
                     <div class="muted small">
@@ -140,11 +134,23 @@
                     <div class="rec">{{ row.recommendation }}</div>
                   }
                 </td>
+                <td class="errors-col-place">
+                  @if (row.location) {
+                    <span class="place">
+                      стр. {{ row.location.page ?? '—' }}, абз. {{ row.location.paragraph ?? '—' }}
+                      @if (row.location.element) {
+                        <span class="muted"> · {{ row.location.element }}</span>
+                      }
+                    </span>
+                  } @else {
+                    <span class="muted">—</span>
+                  }
+                </td>
               </tr>
             </ng-template>
             <ng-template pTemplate="emptymessage">
               <tr>
-                <td colspan="4">Замечаний не найдено.</td>
+                <td colspan="3">Замечаний не найдено.</td>
               </tr>
             </ng-template>
           </p-table>
