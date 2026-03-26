@@ -197,11 +197,13 @@
   color: var(--p-text-color);
 }
 
-.pdf-row {
+.summary-pdf {
   display: flex;
-  flex-wrap: wrap;
+  justify-content: flex-start;
   align-items: center;
-  gap: 1rem 1.5rem;
+  margin: 0;
+  padding: 0.35rem 0 0;
+  border-top: 1px solid var(--p-surface-200);
 }
 
 .muted {

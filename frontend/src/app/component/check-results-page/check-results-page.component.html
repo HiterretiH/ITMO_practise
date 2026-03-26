@@ -76,23 +76,16 @@
                 <dd>{{ result.document_info.paragraphs_checked ?? '—' }}</dd>
               </div>
             </dl>
-          </div>
-        </p-card>
 
-        <p-card header="PDF-отчёт" styleClass="nested-card">
-          <div class="pdf-row">
-            <p-checkbox
-              [(ngModel)]="includeRecommendationsInPdf"
-              [binary]="true"
-              inputId="pdf-rec"
-              label="Включать рекомендации по исправлению"
-            />
-            <p-button
-              label="Скачать PDF"
-              icon="pi pi-download"
-              [loading]="loadingPdf"
-              (onClick)="downloadPdf()"
-            />
+            <div class="summary-pdf">
+              <p-button
+                label="Скачать PDF-отчёт"
+                icon="pi pi-download"
+                severity="primary"
+                [loading]="loadingPdf"
+                (onClick)="downloadPdf()"
+              />
+            </div>
           </div>
         </p-card>
 

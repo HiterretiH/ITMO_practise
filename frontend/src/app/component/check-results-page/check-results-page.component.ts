@@ -1,12 +1,10 @@
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, inject, OnInit } from '@angular/core';
-import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
-import { CheckboxModule } from 'primeng/checkbox';
 import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { ToastModule } from 'primeng/toast';
@@ -21,14 +19,12 @@ import { ValidationSessionService } from '../../service/validation-session.servi
   standalone: true,
   imports: [
     CommonModule,
-    FormsModule,
     HeaderComponent,
     ToastModule,
     CardModule,
     ButtonModule,
     TableModule,
     TagModule,
-    CheckboxModule,
   ],
   templateUrl: './check-results-page.component.html',
   styleUrl: './check-results-page.component.css',
@@ -40,7 +36,6 @@ export class CheckResultsPageComponent implements OnInit {
   private readonly messages = inject(MessageService);
 
   result: ValidationResult | null = null;
-  includeRecommendationsInPdf = true;
   loadingPdf = false;
 
   ngOnInit(): void {
@@ -54,7 +49,7 @@ export class CheckResultsPageComponent implements OnInit {
     this.loadingPdf = true;
     this.api
       .generateReportPdf(this.result, {
-        include_recommendations: this.includeRecommendationsInPdf,
+        include_recommendations: true,
       })
       .subscribe({
         next: (blob) => {
