@@ -28,31 +28,52 @@
           />
         </div>
 
-        <p-card header="Сводка" styleClass="nested-card">
-          <div class="summary-grid">
-            <div class="summary-main">
+        <p-card styleClass="nested-card summary-card">
+          <ng-template pTemplate="title">
+            <div class="summary-card-title-row">
+              <span class="summary-card-title-text">Сводка</span>
               <p-tag [value]="statusLabel(result.summary.status)" [severity]="statusSeverity(result.summary.status)" />
             </div>
-            <dl class="meta-list">
-              <div>
-                <dt>Файл</dt>
-                <dd>{{ result.document_info.filename ?? '—' }}</dd>
+          </ng-template>
+          <div class="summary-layout">
+            <div class="summary-file">
+              <span class="summary-file-label">Файл</span>
+              <span class="summary-file-name" [title]="result.document_info.filename ?? ''">
+                {{ result.document_info.filename ?? '—' }}
+              </span>
+            </div>
+
+            <div class="summary-counts" role="group" aria-label="Статистика замечаний">
+              <div
+                class="count-tile count-tile--remarks"
+                [class.count-tile--active]="result.summary.total_errors > 0"
+              >
+                <div class="count-tile__head">
+                  <i class="pi pi-exclamation-circle count-tile__icon" aria-hidden="true"></i>
+                  <span class="count-tile__label">Всего замечаний</span>
+                </div>
+                <span class="count-tile__value">{{ result.summary.total_errors }}</span>
               </div>
-              <div>
+              <div
+                class="count-tile count-tile--critical"
+                [class.count-tile--active]="result.summary.critical_errors > 0"
+              >
+                <div class="count-tile__head">
+                  <i class="pi pi-times-circle count-tile__icon" aria-hidden="true"></i>
+                  <span class="count-tile__label">Критических</span>
+                </div>
+                <span class="count-tile__value">{{ result.summary.critical_errors }}</span>
+              </div>
+            </div>
+
+            <dl class="summary-meta">
+              <div class="summary-meta-item">
                 <dt>Страниц</dt>
                 <dd>{{ result.document_info.pages ?? '—' }}</dd>
               </div>
-              <div>
+              <div class="summary-meta-item">
                 <dt>Абзацев проверено</dt>
                 <dd>{{ result.document_info.paragraphs_checked ?? '—' }}</dd>
-              </div>
-              <div>
-                <dt>Всего замечаний</dt>
-                <dd>{{ result.summary.total_errors }}</dd>
-              </div>
-              <div>
-                <dt>Критических</dt>
-                <dd>{{ result.summary.critical_errors }}</dd>
               </div>
             </dl>
           </div>
