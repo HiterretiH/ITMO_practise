@@ -29,6 +29,30 @@
   color: var(--p-text-muted-color);
 }
 
+.upload-footnote {
+  margin: 1rem 0 0;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--p-text-muted-color);
+}
+
+.upload-footnote__link {
+  color: var(--p-primary-color);
+  font-weight: 500;
+  text-decoration: none;
+  text-underline-offset: 0.15em;
+}
+
+.upload-footnote__link:hover {
+  text-decoration: underline;
+}
+
+.upload-footnote__link:focus-visible {
+  outline: 2px solid var(--p-primary-color);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
 :host ::ng-deep .upload-dropzone .p-fileupload-content {
   min-height: 220px;
   display: flex;

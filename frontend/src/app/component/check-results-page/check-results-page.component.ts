@@ -10,6 +10,7 @@ import { TagModule } from 'primeng/tag';
 import { ToastModule } from 'primeng/toast';
 
 import { HeaderComponent } from '../header/header.component';
+import { RequirementsFootnoteCardComponent } from '../requirements-footnote-card/requirements-footnote-card.component';
 import { ValidationResult } from '../../models/validation';
 import { VkrApiService } from '../../service/vkr-api.service';
 import { ValidationSessionService } from '../../service/validation-session.service';
@@ -20,6 +21,7 @@ import { ValidationSessionService } from '../../service/validation-session.servi
   imports: [
     CommonModule,
     HeaderComponent,
+    RequirementsFootnoteCardComponent,
     ToastModule,
     CardModule,
     ButtonModule,
