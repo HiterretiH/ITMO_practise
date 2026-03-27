@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 /**
- * ФТ-13: оформление иллюстраций (рисунков), п. 4.5.3.
+ * оформление иллюстраций (рисунков), п. 4.5.3.
  * <p>
  * Подпись: «Рисунок N – Название рисунка»; расположение — под рисунком, по центру.
  */
@@ -48,7 +48,7 @@ public final class Ft13FigureCaptionChecker {
 
             if (cap == null || cap.isBlank()) {
                 add(issues,
-                        "ФТ-13: " + REQ + " — " + where + ": нет подписи под рисунком. Нужно: «Рисунок N – Название» "
+                        "" + REQ + " — " + where + ": нет подписи под рисунком. Нужно: «Рисунок N – Название» "
                                 + "(N — номер арабскими цифрами), подпись по центру под рисунком.");
                 n++;
                 continue;
@@ -57,7 +57,7 @@ public final class Ft13FigureCaptionChecker {
             String normalized = normalizeCaption(cap);
             if (!CAPTION_FORMAT.matcher(normalized).matches()) {
                 add(issues,
-                        "ФТ-13: " + REQ + " — " + where + ": подпись не по шаблону «Рисунок N – Название рисунка». "
+                        "" + REQ + " — " + where + ": подпись не по шаблону «Рисунок N – Название рисунка». "
                                 + "Найдено: «" + shorten(cap, 120) + "». "
                                 + explainFormatMismatch(cap));
                 n++;
@@ -70,7 +70,7 @@ public final class Ft13FigureCaptionChecker {
             }
             if (capIdx == null) {
                 add(issues,
-                        "ФТ-13: " + REQ + " — " + where + ": подпись по формату есть, но абзац с этим текстом "
+                        "" + REQ + " — " + where + ": подпись по формату есть, но абзац с этим текстом "
                                 + "не найден в модели документа — выравнивание по центру автоматически не проверено "
                                 + "(убедитесь, что подпись — отдельный абзац под рисунком, по центру).");
                 n++;
@@ -78,14 +78,14 @@ public final class Ft13FigureCaptionChecker {
             }
             if (capIdx < 0 || capIdx >= paras.size()) {
                 add(issues,
-                        "ФТ-13: " + REQ + " — " + where + ": индекс абзаца подписи (#"
+                        "" + REQ + " — " + where + ": индекс абзаца подписи (#"
                                 + capIdx + ") вне диапазона абзацев документа — выравнивание не проверено.");
                 n++;
                 continue;
             }
             if (capIdx < imgIdx) {
                 add(issues,
-                        "ФТ-13: " + REQ + " — " + where + ": подпись должна быть под рисунком (абзац подписи #"
+                        "" + REQ + " — " + where + ": подпись должна быть под рисунком (абзац подписи #"
                                 + capIdx + " выше абзаца с рисунком #" + imgIdx + ").");
                 n++;
             }
@@ -95,7 +95,7 @@ public final class Ft13FigureCaptionChecker {
             String al = paras.get(capIdx).getAlignment();
             if (al == null || !"CENTER".equalsIgnoreCase(al)) {
                 add(issues,
-                        "ФТ-13: " + REQ + " — " + where + ": подпись должна быть выровнена по центру "
+                        "" + REQ + " — " + where + ": подпись должна быть выровнена по центру "
                                 + "(абзац подписи #" + capIdx + "; сейчас: "
                                 + (al == null ? "не задано" : al) + ").");
                 n++;

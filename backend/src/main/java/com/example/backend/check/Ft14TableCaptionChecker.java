@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 /**
- * ФТ-14: оформление таблиц, п. 4.6.3.
+ * оформление таблиц, п. 4.6.3.
  * <p>
  * Название над таблицей слева: «Таблица N – Название таблицы». Объекты в {@link TableInfo} — настоящие
  * таблицы Word ({@code w:tbl}); вставка таблицы как растрового рисунка в список таблиц не попадает
@@ -46,7 +46,7 @@ public final class Ft14TableCaptionChecker {
 
             if (cap == null || cap.isBlank()) {
                 add(issues,
-                        "ФТ-14: " + REQ + " — " + where + ": нет названия над таблицей. Нужно: «Таблица N – Название» "
+                        "" + REQ + " — " + where + ": нет названия над таблицей. Нужно: «Таблица N – Название» "
                                 + "(N — номер арабскими цифрами), слева, строкой над таблицей.");
                 n++;
                 continue;
@@ -55,7 +55,7 @@ public final class Ft14TableCaptionChecker {
             String normalized = normalizeCaption(cap);
             if (!CAPTION_FORMAT.matcher(normalized).matches()) {
                 add(issues,
-                        "ФТ-14: " + REQ + " — " + where + ": название не по шаблону «Таблица N – Название таблицы». "
+                        "" + REQ + " — " + where + ": название не по шаблону «Таблица N – Название таблицы». "
                                 + "Найдено: «" + shorten(cap, 120) + "». "
                                 + explainFormatMismatch(cap));
                 n++;
@@ -68,7 +68,7 @@ public final class Ft14TableCaptionChecker {
             }
             if (capIdx == null) {
                 add(issues,
-                        "ФТ-14: " + REQ + " — " + where + ": название по формату есть, но абзац с этим текстом "
+                        "" + REQ + " — " + where + ": название по формату есть, но абзац с этим текстом "
                                 + "не найден в модели документа — выравнивание слева автоматически не проверено "
                                 + "(название должно быть отдельным абзацем над таблицей, по левому краю).");
                 n++;
@@ -76,14 +76,14 @@ public final class Ft14TableCaptionChecker {
             }
             if (capIdx < 0 || capIdx >= paras.size()) {
                 add(issues,
-                        "ФТ-14: " + REQ + " — " + where + ": индекс абзаца названия (#"
+                        "" + REQ + " — " + where + ": индекс абзаца названия (#"
                                 + capIdx + ") вне диапазона — выравнивание не проверено.");
                 n++;
                 continue;
             }
             if (capIdx >= tableFirstParaIdx) {
                 add(issues,
-                        "ФТ-14: " + REQ + " — " + where + ": название должно быть над таблицей (абзац названия #"
+                        "" + REQ + " — " + where + ": название должно быть над таблицей (абзац названия #"
                                 + capIdx + " не выше первого абзаца таблицы #" + tableFirstParaIdx + ").");
                 n++;
             }
@@ -93,7 +93,7 @@ public final class Ft14TableCaptionChecker {
             String al = paras.get(capIdx).getAlignment();
             if (al != null && !"LEFT".equalsIgnoreCase(al)) {
                 add(issues,
-                        "ФТ-14: " + REQ + " — " + where + ": название таблицы должно быть выровнено по левому краю "
+                        "" + REQ + " — " + where + ": название таблицы должно быть выровнено по левому краю "
                                 + "(абзац #" + capIdx + "; сейчас: " + al + ").");
                 n++;
             }

@@ -14,7 +14,7 @@ import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 /**
- * ФТ-21: оформление маркированных и нумерованных списков (п. Приложение 1 / п. 3.2 в ТЗ).
+ * оформление маркированных и нумерованных списков (п. Приложение 1 / п. 3.2 в ТЗ).
  * <p>
  * Обрабатываются все абзацы с нумерацией Word ({@code w:numPr}). Один список — это <b>непрерывная цепочка</b> абзацев
  * со списком (без обычного текста между пунктами). Word иногда задаёт разным пунктам разный {@code numId} — такие фрагменты
@@ -56,7 +56,7 @@ public final class Ft21ListsEnumerationChecker {
                 issues.add(
                         String.format(
                                 Locale.ROOT,
-                                "ФТ-21: %s — %s по всему списку смешаны разные типы маркеров/нумерации: %s.",
+                                "%s — %s по всему списку смешаны разные типы маркеров/нумерации: %s.",
                                 REQ,
                                 listCtx,
                                 formatFmtCounts(entire)));
@@ -70,7 +70,7 @@ public final class Ft21ListsEnumerationChecker {
                     issues.add(
                             String.format(
                                     Locale.ROOT,
-                                    "ФТ-21: %s — %s на одном уровне (ilvl=%d) разные маркеры: %s.",
+                                    "%s — %s на одном уровне (ilvl=%d) разные маркеры: %s.",
                                     REQ,
                                     listCtx,
                                     level,
@@ -187,7 +187,7 @@ public final class Ft21ListsEnumerationChecker {
                 issues.add(
                         String.format(
                                 Locale.ROOT,
-                                "ФТ-21: %s — %s; абзац документа №%d (стр. %s): для пункта уровня 0 ожидается "
+                                "%s — %s; абзац документа №%d (стр. %s): для пункта уровня 0 ожидается "
                                         + "заметный абзацный/левый отступ (ориентир ~%.2f см как в основном тексте); "
                                         + "фактически красная строка %s см, левый отступ %s см.",
                                 REQ,
@@ -264,7 +264,7 @@ public final class Ft21ListsEnumerationChecker {
                     issues.add(
                             String.format(
                                     Locale.ROOT,
-                                    "ФТ-21: %s — %s; последний пункт уровня 0 (абзац №%d, стр. %s): "
+                                    "%s — %s; последний пункт уровня 0 (абзац №%d, стр. %s): "
                                             + "завершение списка — нужна точка в конце, а не «;».",
                                     REQ,
                                     listCtx,
@@ -275,7 +275,7 @@ public final class Ft21ListsEnumerationChecker {
                     issues.add(
                             String.format(
                                     Locale.ROOT,
-                                    "ФТ-21: %s — %s; последний пункт уровня 0 (абзац №%d, стр. %s): "
+                                    "%s — %s; последний пункт уровня 0 (абзац №%d, стр. %s): "
                                             + "ожидается точка в конце элемента (или ! ?); последнее слово без завершающей точки: «%s».",
                                     REQ,
                                     listCtx,
@@ -289,7 +289,7 @@ public final class Ft21ListsEnumerationChecker {
                         issues.add(
                                 String.format(
                                         Locale.ROOT,
-                                        "ФТ-21: %s — %s; «мелкий» пункт уровня 0 (абзац №%d, стр. %s): ожидается «;» в конце.",
+                                        "%s — %s; «мелкий» пункт уровня 0 (абзац №%d, стр. %s): ожидается «;» в конце.",
                                         REQ,
                                         listCtx,
                                         idx + 1,

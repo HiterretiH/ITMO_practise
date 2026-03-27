@@ -24,7 +24,7 @@ class Ft10PageMarginsCheckerTest {
                 Ft10PageMarginsChecker.check(
                         settings, PageMargins.builder().build(), List.of(ParagraphInfo.builder().pageIndex(1).build()), List.of());
         assertFalse(issues.isEmpty());
-        assertTrue(issues.stream().anyMatch(s -> s.contains("ФТ-10") && s.contains("левое")));
+        assertTrue(issues.stream().anyMatch(s -> s.contains("левое")));
     }
 
     @Test

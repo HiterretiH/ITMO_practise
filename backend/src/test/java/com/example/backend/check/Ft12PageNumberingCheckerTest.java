@@ -16,7 +16,7 @@ class Ft12PageNumberingCheckerTest {
     void issue_whenPageSettingsNull() {
         List<String> issues = Ft12PageNumberingChecker.check(null, List.of(), List.of());
         assertFalse(issues.isEmpty());
-        assertTrue(issues.get(0).contains("ФТ-12"));
+        assertTrue(issues.get(0).contains("4.3.1"));
     }
 
     @Test

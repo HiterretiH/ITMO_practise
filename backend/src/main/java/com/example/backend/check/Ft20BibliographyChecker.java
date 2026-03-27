@@ -12,7 +12,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * ФТ-20: проверка списка использованных источников (п. 4.10).
+ * проверка списка использованных источников (п. 4.10).
  * <p>
  * Заголовок раздела: «СПИСОК ИСПОЛЬЗОВАННЫХ ИСТОЧНИКОВ». Ссылки в тексте — только вида {@code [n]} (квадратные скобки).
  * Записи списка учитываются в двух вариантах:
@@ -44,17 +44,17 @@ public final class Ft20BibliographyChecker {
      */
     public static String formatSectionDiagnostics(List<ParagraphInfo> paragraphs, String fullText) {
         if (paragraphs == null || paragraphs.isEmpty()) {
-            return "ФТ-20: нет абзацев — раздел «" + CheckSession.ft20().sectionTitle() + "» не искался.";
+            return "нет абзацев — раздел «" + CheckSession.ft20().sectionTitle() + "» не искался.";
         }
         Integer h = findSectionHeadingIndex(paragraphs);
         if (h == null) {
-            return "ФТ-20: раздел «" + CheckSession.ft20().sectionTitle() + "» не найден (заголовок уровня 0 или совпадение по тексту).";
+            return "раздел «" + CheckSession.ft20().sectionTitle() + "» не найден (заголовок уровня 0 или совпадение по тексту).";
         }
         int next = findNextOutline0HeadingIndex(paragraphs, h);
         BibEntriesResult parsed = parseBibliographyEntries(paragraphs, h + 1, next);
         return String.format(
                 Locale.ROOT,
-                "ФТ-20: раздел найден — абзац заголовка №%d; записей источников: %d "
+                "раздел найден — абзац заголовка №%d; записей источников: %d "
                         + "(нумерованный список Word: %d; явный текст «n.» в начале строки: %d).",
                 h + 1,
                 parsed.numbers().size(),
@@ -86,7 +86,7 @@ public final class Ft20BibliographyChecker {
         Integer h = findSectionHeadingIndex(paragraphs);
         if (h == null) {
             issues.add(
-                    "ФТ-20: "
+                    ""
                             + REQ
                             + " — не найден заголовок раздела «"
                             + CheckSession.ft20().sectionTitle()
@@ -104,7 +104,7 @@ public final class Ft20BibliographyChecker {
             issues.add(
                     String.format(
                             Locale.ROOT,
-                            "ФТ-20: %s — раздел найден (абзац заголовка №%d), но не обнаружено ни одной записи источника: "
+                            "%s — раздел найден (абзац заголовка №%d), но не обнаружено ни одной записи источника: "
                                     + "нужны абзацы нумерованного списка Word (не маркированного) или строки, начинающиеся с «1. », «2. », … "
                                     + "(арабская цифра, точка, пробел в начале строки).",
                             REQ,
@@ -117,7 +117,7 @@ public final class Ft20BibliographyChecker {
                     issues.add(
                             String.format(
                                     Locale.ROOT,
-                                    "ФТ-20: %s — нумерация источников по порядку: ожидался номер %d после предыдущей записи, "
+                                    "%s — нумерация источников по порядку: ожидался номер %d после предыдущей записи, "
                                             + "фактически в списке идёт %d (п. 4.10: сквозная нумерация арабскими цифрами).",
                                     REQ,
                                     expected,
@@ -130,7 +130,7 @@ public final class Ft20BibliographyChecker {
                 issues.add(
                         String.format(
                                 Locale.ROOT,
-                                "ФТ-20: %s — в списке источников повторяются номера записей.",
+                                "%s — в списке источников повторяются номера записей.",
                                 REQ));
             }
         }
@@ -141,7 +141,7 @@ public final class Ft20BibliographyChecker {
                 issues.add(
                         String.format(
                                 Locale.ROOT,
-                                "ФТ-20: %s — в тексте документа есть ссылка [%d], "
+                                "%s — в тексте документа есть ссылка [%d], "
                                         + "но записи с номером %d в списке источников не найдено (нумерованный список Word и строки «%d. …»).",
                                 REQ,
                                 n,
@@ -158,7 +158,7 @@ public final class Ft20BibliographyChecker {
                 issues.add(
                         String.format(
                                 Locale.ROOT,
-                                "ФТ-20: %s — в списке есть источник №%d, но во всём тексте документа нет вхождения [%d] "
+                                "%s — в списке есть источник №%d, но во всём тексте документа нет вхождения [%d] "
                                         + "(ищется подстрока в квадратных скобках).",
                                 REQ,
                                 n,
@@ -198,7 +198,7 @@ public final class Ft20BibliographyChecker {
         List<Integer> bibNums = parsed.numbers();
 
         lines.add(
-                "ФТ-20: сверка ссылок [n] по полному тексту документа (ищется подстрока «[n]», в том числе в списке источников).");
+                "сверка ссылок [n] по полному тексту документа (ищется подстрока «[n]», в том числе в списке источников).");
         if (cited.isEmpty()) {
             lines.add("В документе не найдено ни одной подстроки вида [число] в квадратных скобках.");
         } else {

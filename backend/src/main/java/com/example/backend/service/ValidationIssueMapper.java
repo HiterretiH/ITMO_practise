@@ -12,7 +12,8 @@ import java.util.regex.Pattern;
 
 final class ValidationIssueMapper {
 
-    private static final Pattern FT_PREFIX = Pattern.compile("^ФТ-(\\d+):\\s*");
+    /** Начало сообщения: «ФТ-N:» или «ФТ-N (п. …):» (как в ряде проверок, напр. ФТ-11). */
+    private static final Pattern FT_PREFIX = Pattern.compile("^ФТ-(\\d+)(?:\\s*\\([^)]*\\))?\\s*:\\s*");
     private static final Pattern LOC_ST_PAGE_PARA = Pattern.compile(
             "стр\\.\\s*(\\d+),\\s*абз\\.\\s*#(\\d+)", Pattern.CASE_INSENSITIVE);
     private static final Pattern LOC_PARA_ONLY = Pattern.compile("абз\\.\\s*#(\\d+)", Pattern.CASE_INSENSITIVE);
@@ -45,9 +46,10 @@ final class ValidationIssueMapper {
         String withoutPreview = TEXT_PREVIEW_SUFFIX.matcher(trimmed).replaceFirst("").trim();
         String previewFragment = extractPreviewFragment(trimmed);
 
-        ExpectedActualPair pair = parseExpectedActual(withoutPreview);
+        String noFt = stripFtPrefix(withoutPreview);
+        ExpectedActualPair pair = parseExpectedActual(noFt);
 
-        String description = withoutPreview;
+        String description = capitalizeFirstLetter(noFt);
         String expected = pair.expected();
         String actual = pair.actual() != null ? pair.actual() : previewFragment;
 
@@ -59,8 +61,31 @@ final class ValidationIssueMapper {
                 .description(description)
                 .expected(expected)
                 .actual(actual)
-                .recommendation(recommendationFor(type, withoutPreview))
+                .recommendation(recommendationFor(type, noFt))
                 .build();
+    }
+
+    private static String stripFtPrefix(String text) {
+        if (text == null || text.isBlank()) {
+            return "";
+        }
+        return FT_PREFIX.matcher(text.trim()).replaceFirst("").trim();
+    }
+
+    private static String capitalizeFirstLetter(String text) {
+        if (text == null || text.isBlank()) {
+            return text == null ? "" : text.trim();
+        }
+        String t = text.trim();
+        int cp = t.codePointAt(0);
+        if (!Character.isLetter(cp) || Character.isUpperCase(cp)) {
+            return t;
+        }
+        int upperCp = Character.toUpperCase(cp);
+        StringBuilder sb = new StringBuilder(t.length());
+        sb.appendCodePoint(upperCp);
+        sb.append(t, t.offsetByCodePoints(0, 1), t.length());
+        return sb.toString();
     }
 
     private static String extractPreviewFragment(String message) {
@@ -165,7 +190,10 @@ final class ValidationIssueMapper {
             case 13 -> ErrorType.FIGURE_CAPTION_ERROR;
             case 14 -> ErrorType.TABLE_CAPTION_ERROR;
             case 17 -> ErrorType.INVALID_LIST_FORMAT;
+            case 18 -> ErrorType.CONTENT_TITLE_MISMATCH;
             case 19 -> ErrorType.FORMULA_ERROR;
+            case 20 -> ErrorType.CITATION_ERROR;
+            case 21 -> ErrorType.INVALID_LIST_FORMAT;
             default -> ErrorType.CONTENT_TITLE_MISMATCH;
         };
     }
