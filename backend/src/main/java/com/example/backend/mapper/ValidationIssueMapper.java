@@ -1,4 +1,4 @@
-package com.example.backend.service;
+package com.example.backend.mapper;
 
 import com.example.backend.json.ErrorItem;
 import com.example.backend.json.ErrorLocation;
@@ -10,7 +10,7 @@ import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-final class ValidationIssueMapper {
+public final class ValidationIssueMapper {
 
     /** Начало сообщения: «ФТ-N:» или «ФТ-N (п. …):» (как в ряде проверок, напр. ФТ-11). */
     private static final Pattern FT_PREFIX = Pattern.compile("^ФТ-(\\d+)(?:\\s*\\([^)]*\\))?\\s*:\\s*");
@@ -28,7 +28,7 @@ final class ValidationIssueMapper {
     private ValidationIssueMapper() {
     }
 
-    static ErrorItem toErrorItem(String message) {
+    public static ErrorItem toErrorItem(String message) {
         if (message == null || message.isBlank()) {
             return ErrorItem.builder()
                     .id(UUID.randomUUID())

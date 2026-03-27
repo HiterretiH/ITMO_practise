@@ -11,6 +11,7 @@ import com.example.backend.json.ErrorSeverity;
 import com.example.backend.json.ValidationResult;
 import com.example.backend.json.ValidationStatus;
 import com.example.backend.json.ValidationSummary;
+import com.example.backend.mapper.ValidationIssueMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
