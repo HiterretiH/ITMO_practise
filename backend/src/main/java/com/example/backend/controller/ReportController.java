@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.nio.charset.StandardCharsets;
+
 @RestController
 @RequestMapping("/v1")
 public class ReportController {
@@ -35,7 +37,7 @@ public class ReportController {
         byte[] pdf = reportService.buildReport(request.getValidationData(), request.getOptions());
         String filename = reportFilename(request.getValidationData().getDocumentInfo());
         ContentDisposition disposition = ContentDisposition.attachment()
-                .filename(filename)
+                .filename(filename, StandardCharsets.UTF_8)
                 .build();
         return ResponseEntity.status(HttpStatus.OK)
                 .header(HttpHeaders.CONTENT_DISPOSITION, disposition.toString())
