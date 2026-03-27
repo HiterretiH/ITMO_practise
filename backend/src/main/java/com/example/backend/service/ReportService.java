@@ -14,6 +14,7 @@ import org.openpdf.text.Element;
 import org.openpdf.text.Font;
 import org.openpdf.text.PageSize;
 import org.openpdf.text.Paragraph;
+import org.openpdf.text.Chunk;
 import org.openpdf.text.Phrase;
 import org.openpdf.text.pdf.BaseFont;
 import org.openpdf.text.pdf.RGBColor;
@@ -55,14 +56,17 @@ public class ReportService {
         Font titleFont = loadFont(16, Font.BOLD);
         Font bodyFont = loadFont(11, Font.NORMAL);
         Font smallFont = loadFont(9, Font.NORMAL);
-        Font headerFont = loadFont(10, Font.BOLD);
+        Font sectionHeaderFont = loadFont(10, Font.BOLD);
+        Font tableFont = loadFont(11, Font.NORMAL);
+        Font tableFontBold = loadFont(11, Font.BOLD);
+        Font tableHeaderFont = loadFont(11, Font.BOLD);
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         Document document = new Document(PageSize.A4, MARGIN, MARGIN, MARGIN, MARGIN);
         PdfWriter.getInstance(document, out);
         document.open();
 
-        document.add(new Paragraph("Отчёт о проверке ВКР", titleFont));
+        document.add(new Paragraph("Отчёт о проверке шаблона ВКР", titleFont));
         document.add(new Paragraph("Автоматическая проверка шаблона на соответствие требованиям ИТМО", smallFont));
         document.add(new Paragraph(" "));
 
@@ -83,7 +87,7 @@ public class ReportService {
 
         ValidationSummary summary = result.getSummary();
         if (summary != null) {
-            document.add(new Paragraph("Сводка", headerFont));
+            document.add(new Paragraph("Сводка", sectionHeaderFont));
             Integer total = summary.getTotalErrors();
             Integer critical = summary.getCriticalErrors();
             ValidationStatus status = summary.getStatus();
@@ -99,9 +103,9 @@ public class ReportService {
         if (errors == null || errors.isEmpty()) {
             document.add(new Paragraph("Ошибок не найдено.", bodyFont));
         } else {
-            document.add(new Paragraph("Найденные несоответствия", headerFont));
+            document.add(new Paragraph("Найденные несоответствия", sectionHeaderFont));
             document.add(new Paragraph(" "));
-            PdfPTable table = buildErrorTable(errors, includeRecommendations, bodyFont, smallFont, headerFont);
+            PdfPTable table = buildErrorTable(errors, includeRecommendations, tableFont, tableFontBold, tableHeaderFont);
             document.add(table);
         }
 
@@ -112,62 +116,50 @@ public class ReportService {
     private PdfPTable buildErrorTable(
             List<ErrorItem> errors,
             boolean includeRecommendations,
-            Font bodyFont,
-            Font smallFont,
-            Font headerFont
+            Font tableFont,
+            Font tableFontBold,
+            Font tableHeaderFont
     ) {
-        int cols = includeRecommendations ? 7 : 6;
-        PdfPTable table = new PdfPTable(cols);
+        PdfPTable table = new PdfPTable(4);
         table.setWidthPercentage(100f);
         try {
-            if (includeRecommendations) {
-                table.setWidths(new float[]{0.55f, 1.0f, 2.0f, 1.1f, 1.1f, 1.1f, 1.35f});
-            } else {
-                table.setWidths(new float[]{0.55f, 1.0f, 2.2f, 1.2f, 1.2f, 1.25f});
-            }
+            table.setWidths(new float[]{0.45f, 1.2f, 3.15f, 1.0f});
         } catch (Exception ignored) {
             // keep default widths
         }
 
-        addHeaderCell(table, "№", headerFont);
-        addHeaderCell(table, "Уровень", headerFont);
-        addHeaderCell(table, "Тип и описание", headerFont);
-        addHeaderCell(table, "Место", headerFont);
-        addHeaderCell(table, "Ожидаемое", headerFont);
-        addHeaderCell(table, "Фактическое", headerFont);
-        if (includeRecommendations) {
-            addHeaderCell(table, "Рекомендация", headerFont);
-        }
+        addHeaderCell(table, "№", tableHeaderFont);
+        addHeaderCell(table, "Критичность", tableHeaderFont);
+        addHeaderCell(table, "Описание", tableHeaderFont);
+        addHeaderCell(table, "Место", tableHeaderFont);
 
         int row = 1;
         for (ErrorItem item : errors) {
-            boolean critical = item.getSeverity() == ErrorSeverity.critical;
-            PdfPCell c0 = dataCell(String.valueOf(row++), bodyFont, critical);
-            PdfPCell c1 = dataCell(severityLabel(item.getSeverity()), bodyFont, critical);
-
-            PdfPCell typeCell = new PdfPCell();
-            typeCell.setPadding(4);
-            if (critical) {
-                typeCell.setBackgroundColor(new RGBColor(255, 230, 230));
-            }
-            ErrorType type = item.getType();
-            typeCell.addElement(new Paragraph(errorTypeRu(type), bodyFont));
-            String desc = nullToEmpty(item.getDescription());
-            if (!desc.isEmpty()) {
-                typeCell.addElement(new Paragraph(desc, smallFont));
-            }
-            table.addCell(c0);
-            table.addCell(c1);
-            table.addCell(typeCell);
-
-            table.addCell(dataCell(formatLocation(item.getLocation()), bodyFont, critical));
-            table.addCell(dataCell(nullToEmpty(item.getExpected()), bodyFont, critical));
-            table.addCell(dataCell(nullToEmpty(item.getActual()), bodyFont, critical));
-            if (includeRecommendations) {
-                table.addCell(dataCell(nullToEmpty(item.getRecommendation()), bodyFont, critical));
-            }
+            table.addCell(numberCell(String.valueOf(row++), tableFont));
+            table.addCell(severityCell(severityLabel(item.getSeverity()), tableFont));
+            table.addCell(descriptionCell(item, includeRecommendations, tableFont, tableFontBold));
+            table.addCell(placeCell(formatLocation(item.getLocation()), tableFont));
         }
         return table;
+    }
+
+    private PdfPCell descriptionCell(ErrorItem item, boolean includeRecommendation, Font font, Font titleFont) {
+        PdfPCell cell = new PdfPCell();
+        cell.setPadding(4);
+        ErrorType type = item.getType();
+        cell.addElement(new Paragraph(errorTypeRu(type), titleFont));
+        String desc = nullToEmpty(item.getDescription());
+        if (!desc.isEmpty()) {
+            cell.addElement(new Paragraph(desc, font));
+        }
+        String rec = nullToEmpty(item.getRecommendation());
+        if (includeRecommendation && !rec.isEmpty()) {
+            Phrase recPhrase = new Phrase();
+            recPhrase.add(new Chunk("Рекомендация: ", titleFont));
+            recPhrase.add(new Chunk(rec, font));
+            cell.addElement(new Paragraph(recPhrase));
+        }
+        return cell;
     }
 
     private static void addHeaderCell(PdfPTable table, String text, Font font) {
@@ -179,11 +171,28 @@ public class ReportService {
         table.addCell(cell);
     }
 
-    private static PdfPCell dataCell(String text, Font font, boolean critical) {
+    private static PdfPCell numberCell(String text, Font font) {
         PdfPCell cell = new PdfPCell(new Phrase(text, font));
         cell.setPadding(4);
-        if (critical) {
-            cell.setBackgroundColor(new RGBColor(255, 230, 230));
+        cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+        cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+        return cell;
+    }
+
+    private static PdfPCell severityCell(String text, Font font) {
+        PdfPCell cell = new PdfPCell(new Phrase(text, font));
+        cell.setPadding(4);
+        cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+        cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+        return cell;
+    }
+
+    private static PdfPCell placeCell(String text, Font font) {
+        PdfPCell cell = new PdfPCell(new Phrase(text, font));
+        cell.setPadding(4);
+        cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+        if ("—".equals(text)) {
+            cell.setHorizontalAlignment(Element.ALIGN_CENTER);
         }
         return cell;
     }
@@ -229,7 +238,7 @@ public class ReportService {
         if (severity == null) {
             return "—";
         }
-        return severity == ErrorSeverity.critical ? "критическая" : "предупреждение";
+        return severity == ErrorSeverity.critical ? "Высокая" : "Средняя";
     }
 
     private static String formatLocation(ErrorLocation loc) {

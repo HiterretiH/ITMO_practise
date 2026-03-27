@@ -76,7 +76,7 @@ class ReportServiceTest {
     }
 
     @Test
-    void buildReport_withoutRecommendations_columnOmitted() {
+    void buildReport_withoutRecommendations_omitsRecommendationText() {
         ValidationResult result = ValidationResult.builder()
                 .errors(List.of(ErrorItem.builder()
                         .id(UUID.randomUUID())
@@ -85,7 +85,7 @@ class ReportServiceTest {
                         .description("Поля")
                         .expected("30 мм")
                         .actual("20 мм")
-                        .recommendation("Не показывать")
+                        .recommendation("Длинная рекомендация для проверки размера")
                         .build()))
                 .build();
 
@@ -93,6 +93,6 @@ class ReportServiceTest {
         byte[] withoutRec = reportService.buildReport(result, ReportOptions.builder().includeRecommendations(false).build());
 
         assertTrue(withRec.length > 100 && withoutRec.length > 100);
-        assertTrue(withRec.length > withoutRec.length, "PDF with recommendation column should be larger");
+        assertTrue(withRec.length > withoutRec.length, "PDF with recommendations in description should be larger");
     }
 }
