@@ -16,13 +16,16 @@ import java.util.stream.Collectors;
 /**
  * ФТ-19: оформление формул и уравнений (п. 4.7).
  * <p>
- * <b>Что считается формулой:</b> абзац, в XML которого есть OMML — элементы {@code m:oMath} / {@code oMathPara}
- * (в Word — «Вставка → Уравнение», в LibreOffice — «Вставка → Объект → Формула» / встроенный редактор формул).
- * Это же выставляет {@link com.example.backend.domain.ParagraphInfo#isContainsFormula()} в {@code DocxLoadService}.
+ * <b>Что считается формулой:</b> только абзацы, для которых {@link com.example.backend.util.OfficeMathDetector}
+ * находит в XML OMML-узлы ({@code m:oMath} / {@code m:oMathPara} в {@code word/document.xml} и т.д.).
+ * См. {@link com.example.backend.util.OfficeMathDetector#OMML_NAMESPACE_URI}. Поле
+ * {@link com.example.backend.domain.ParagraphInfo#isContainsFormula()} задаётся в {@code DocxLoadService} по этому признаку.
  * Обычный текст, номера разделов («1 Введение»), строки оглавления — <em>не</em> формулы и не проверяются как таковые.
  * <p>
- * Ссылки на пронумерованные формулы, «где» перед пояснениями, порядок расшифровки символов,
- * единообразие единиц (русские / международные), неразрывный пробел только перед <em>известными</em> обозначениями единиц.
+ * Проверки ниже применяются <b>только к абзацам с OMML-формулой</b> ({@code containsFormula}), кроме ссылки на номер:
+ * ссылка ищется в остальном тексте документа. Единицы и неразрывный пробел — только внутри текста абзацев с формулами.
+ * Дополнительно: формула в отдельной строке — в абзаце не должно быть русскоязычного «простого» текста, кроме хвоста «, где …»
+ * после формулы (п. 4.7 / ТЗ).
  */
 public final class Ft19FormulasChecker {
 
@@ -139,14 +142,14 @@ public final class Ft19FormulasChecker {
     private Ft19FormulasChecker() {
     }
 
-    public static List<String> check(List<ParagraphInfo> paragraphs, String fullText) {
+    /**
+     * @param paragraphs абзацы документа; признак формулы — {@link ParagraphInfo#isContainsFormula()}
+     */
+    public static List<String> check(List<ParagraphInfo> paragraphs) {
         List<String> issues = new ArrayList<>();
         if (paragraphs == null || paragraphs.isEmpty()) {
             return issues;
         }
-
-        String scanText = fullText != null && !fullText.isBlank() ? fullText : joinAllParagraphTexts(paragraphs);
-        issues.addAll(checkUnitMixingAndNbsp(scanText, paragraphs));
 
         List<Integer> formulaIndices = new ArrayList<>();
         for (int i = 0; i < paragraphs.size(); i++) {
@@ -158,9 +161,14 @@ public final class Ft19FormulasChecker {
             return issues;
         }
 
+        String formulaOnlyScan = joinFormulaParagraphTexts(paragraphs);
+        issues.addAll(checkUnitMixingAndNbspInFormulaText(formulaOnlyScan, paragraphs, formulaIndices));
+
         String textForRefs = buildTextExcludingFormulaParagraphs(paragraphs);
 
+        int formulaOrdinal = 0;
         for (int fi : formulaIndices) {
+            formulaOrdinal++;
             ParagraphInfo fp = paragraphs.get(fi);
             String raw = fp.getText();
             if (raw == null) {
@@ -172,30 +180,53 @@ public final class Ft19FormulasChecker {
                     issues.add(
                             String.format(
                                     Locale.ROOT,
-                                    "ФТ-19: %s — для формулы с номером (%s) в тексте не найдена ссылка «(%s)» "
-                                            + "(кроме строки самой формулы). Как исправить: добавьте в текст ссылку на формулу в круглых скобках.",
+                                    "ФТ-19: %s — формула №%d (абзац №%d по порядку в документе, оценка стр. %s): "
+                                            + "в конце строки указан номер (%s), но в остальном тексте работы нет ссылки на эту формулу в виде «(%s)». "
+                                            + "По п. 4.7 каждая пронумерованная формула должна быть упомянута в тексте со своим номером в круглых скобках. "
+                                            + "Как исправить: в нужном месте текста вставьте ссылку, например: «… согласно (%s) …».",
                                     REQ,
+                                    formulaOrdinal,
+                                    fi + 1,
+                                    formatPage(fp.getPageIndex()),
+                                    num,
                                     num,
                                     num));
                 }
             }
 
-            issues.addAll(checkBlankLinesAroundFormula(paragraphs, fi));
-            issues.addAll(checkGdeAndExplanations(paragraphs, fi, raw));
+            issues.addAll(checkFormulaOnSeparateLine(raw, fp, formulaOrdinal, fi));
+            issues.addAll(checkBlankLinesAroundFormula(paragraphs, fi, formulaOrdinal));
+            issues.addAll(checkGdeAndExplanations(paragraphs, fi, raw, formulaOrdinal));
 
             if (issues.size() >= MAX_ISSUES) {
                 return issues;
             }
         }
 
+        formulaOrdinal = 0;
         for (int fi : formulaIndices) {
-            issues.addAll(checkSymbolOrder(paragraphs, fi));
+            formulaOrdinal++;
+            issues.addAll(checkSymbolOrder(paragraphs, fi, formulaOrdinal));
             if (issues.size() >= MAX_ISSUES) {
                 return issues;
             }
         }
 
         return issues;
+    }
+
+    private static String joinFormulaParagraphTexts(List<ParagraphInfo> paragraphs) {
+        StringBuilder sb = new StringBuilder();
+        for (ParagraphInfo p : paragraphs) {
+            if (p.isContainsFormula() && p.getText() != null) {
+                sb.append(p.getText()).append('\n');
+            }
+        }
+        return sb.toString();
+    }
+
+    private static String formatPage(Integer page) {
+        return page == null ? "не определена" : page.toString();
     }
 
     private static String buildTextExcludingFormulaParagraphs(List<ParagraphInfo> paragraphs) {
@@ -206,16 +237,6 @@ public final class Ft19FormulasChecker {
                 if (t != null) {
                     sb.append(t).append('\n');
                 }
-            }
-        }
-        return sb.toString();
-    }
-
-    private static String joinAllParagraphTexts(List<ParagraphInfo> paragraphs) {
-        StringBuilder sb = new StringBuilder();
-        for (ParagraphInfo p : paragraphs) {
-            if (p.getText() != null) {
-                sb.append(p.getText()).append('\n');
             }
         }
         return sb.toString();
@@ -242,18 +263,57 @@ public final class Ft19FormulasChecker {
         return p.matcher(textWithoutFormulaLines).find();
     }
 
-    private static List<String> checkBlankLinesAroundFormula(List<ParagraphInfo> paragraphs, int i) {
+    /**
+     * П. 4.7: формула выделяется в отдельную строку. Эвристика: после удаления номера {@code (n)} и хвоста «, где …»
+     * не должно оставаться кириллического текста (два и более подряд идущих букв) — иначе, вероятно, обычный текст в том же абзаце.
+     */
+    private static List<String> checkFormulaOnSeparateLine(
+            String raw, ParagraphInfo fp, int formulaOrdinal, int paragraphIndex0) {
         List<String> issues = new ArrayList<>();
+        if (raw == null || raw.isBlank()) {
+            return issues;
+        }
+        String t = raw.replace('\u00A0', ' ').trim();
+        t = t.replaceAll("(?i),\\s*где\\s.*$", "").trim();
+        t = stripTrailingNumber(t);
+        if (t.isEmpty()) {
+            return issues;
+        }
+        if (Pattern.compile("[а-яА-ЯёЁ]{2,}").matcher(t).find()) {
+            issues.add(
+                    String.format(
+                            Locale.ROOT,
+                            "ФТ-19: %s — формула №%d (абзац документа №%d, стр. %s): по п. 4.7 формула должна быть выделена в отдельную строку: "
+                                    + "в абзаце с OMML не должно оставаться связного русскоязычного текста, кроме продолжения «, где …» в конце строки формулы. "
+                                    + "После отделения пояснения «где» и номера формулы в тексте абзаца остаётся: «%s». "
+                                    + "Как исправить: оставьте в абзаце только формулу и номер (и при необходимости «, где …») или вынесите пояснение в соседний абзац.",
+                            REQ,
+                            formulaOrdinal,
+                            paragraphIndex0 + 1,
+                            formatPage(fp.getPageIndex()),
+                            shorten(t, 100)));
+        }
+        return issues;
+    }
+
+    private static List<String> checkBlankLinesAroundFormula(List<ParagraphInfo> paragraphs, int i, int formulaOrdinal) {
+        List<String> issues = new ArrayList<>();
+        ParagraphInfo fp = paragraphs.get(i);
+        int docPara = i + 1;
+        String pageStr = formatPage(fp.getPageIndex());
         if (i > 0) {
             ParagraphInfo prev = paragraphs.get(i - 1);
             if (!isBlankParagraph(prev)) {
                 issues.add(
                         String.format(
                                 Locale.ROOT,
-                                "ФТ-19: %s — перед формулой (абзац %d) должна быть пустая строка (отдельное выделение формулы). "
-                                        + "Как исправить: вставьте пустой абзац перед строкой с формулой.",
+                                "ФТ-19: %s — формула №%d (абзац документа №%d, стр. %s): перед формулой должна быть пустая строка "
+                                        + "(отдельное выделение формулы по п. 4.7). Сейчас сразу выше идёт непустой абзац без пустой строки между ним и формулой. "
+                                        + "Как исправить: вставьте пустой абзац между предыдущим текстом и строкой с формулой.",
                                 REQ,
-                                i));
+                                formulaOrdinal,
+                                docPara,
+                                pageStr));
             }
         }
         if (i + 1 < paragraphs.size()) {
@@ -263,10 +323,15 @@ public final class Ft19FormulasChecker {
                 issues.add(
                         String.format(
                                 Locale.ROOT,
-                                "ФТ-19: %s — после формулы (абзац %d) ожидается пустая строка или абзац с пояснениями, начинающийся со слова «где». "
-                                        + "Как исправить: вставьте пустой абзац или начните пояснения с «где …».",
+                                "ФТ-19: %s — формула №%d (абзац документа №%d, стр. %s): после формулы ожидается пустая строка "
+                                        + "или абзац с пояснениями к символам, начинающийся со слова «где» (если пояснения не продолжаются в той же строке через «, где …»). "
+                                        + "Сейчас следующий абзац (№%d) не пустой и не начинается с «где». "
+                                        + "Как исправить: вставьте пустой абзац после формулы или начните блок пояснений с «где …».",
                                 REQ,
-                                i));
+                                formulaOrdinal,
+                                docPara,
+                                pageStr,
+                                i + 2));
             }
         }
         return issues;
@@ -295,8 +360,11 @@ public final class Ft19FormulasChecker {
         return t.startsWith("где ") || t.startsWith("где,") || t.equals("где");
     }
 
-    private static List<String> checkGdeAndExplanations(List<ParagraphInfo> paragraphs, int i, String formulaRaw) {
+    private static List<String> checkGdeAndExplanations(List<ParagraphInfo> paragraphs, int i, String formulaRaw, int formulaOrdinal) {
         List<String> issues = new ArrayList<>();
+        ParagraphInfo fp = paragraphs.get(i);
+        int docPara = i + 1;
+        String pageStr = formatPage(fp.getPageIndex());
         if (isGdeContinuationOk(paragraphs, i)) {
             return issues;
         }
@@ -315,11 +383,15 @@ public final class Ft19FormulasChecker {
             issues.add(
                     String.format(
                             Locale.ROOT,
-                            "ФТ-19: %s — пояснения к символам после формулы (абзац %d) должны начинаться со слова «где» "
-                                    + "(часто после запятой в конце строки формулы или с новой строки). "
-                                    + "Как исправить: начните блок пояснений с «где …».",
+                            "ФТ-19: %s — формула №%d (абзац документа №%d, стр. %s): первый непустой абзац после формулы (№%d) выглядит как расшифровка символов "
+                                    + "(есть «символ — пояснение»), но не начинается со слова «где». По п. 4.7 пояснения к символам из формулы должны вводиться словом «где» "
+                                    + "(в новой строке после пустой или через «, где» в конце строки формулы). "
+                                    + "Как исправить: начните этот абзац с «где …» или перенесите расшифровки в строку с формулой после «, где …».",
                             REQ,
-                            j));
+                            formulaOrdinal,
+                            docPara,
+                            pageStr,
+                            j + 1));
         }
         return issues;
     }
@@ -337,12 +409,15 @@ public final class Ft19FormulasChecker {
      * Порядок расшифровок в блоке «где» сравнивается с порядком первых вхождений латинских букв
      * в тексте формулы (после удаления номера в скобках).
      */
-    private static List<String> checkSymbolOrder(List<ParagraphInfo> paragraphs, int formulaIndex) {
+    private static List<String> checkSymbolOrder(List<ParagraphInfo> paragraphs, int formulaIndex, int formulaOrdinal) {
         List<String> issues = new ArrayList<>();
-        String raw = paragraphs.get(formulaIndex).getText();
+        ParagraphInfo fp = paragraphs.get(formulaIndex);
+        String raw = fp.getText();
         if (raw == null) {
             return issues;
         }
+        int docPara = formulaIndex + 1;
+        String pageStr = formatPage(fp.getPageIndex());
         String formulaBody = stripTrailingNumber(raw).trim();
         List<String> lettersInFormula = firstOccurrenceLatinLetters(formulaBody);
         if (lettersInFormula.isEmpty()) {
@@ -381,13 +456,17 @@ public final class Ft19FormulasChecker {
                 issues.add(
                         String.format(
                                 Locale.ROOT,
-                                "ФТ-19: %s — порядок расшифровки символов после «где» не совпадает с порядком вхождений в формуле: "
-                                        + "ожидалось «%s», в пояснении — «%s» (позиция %d). "
-                                        + "Как исправить: переставьте пояснения в том же порядке, что и символы в формуле.",
+                                "ФТ-19: %s — формула №%d (абзац документа №%d, стр. %s): порядок расшифровки символов после «где» не совпадает с порядком "
+                                        + "первых латинских букв в тексте формулы (без номера в скобках). На позиции %d в блоке пояснений ожидался символ «%s» "
+                                        + "(как в формуле), фактически указан «%s». "
+                                        + "Как исправить: переставьте фрагменты расшифровки так, чтобы они шли в том же порядке, что и соответствующие буквы в формуле.",
                                 REQ,
+                                formulaOrdinal,
+                                docPara,
+                                pageStr,
+                                k + 1,
                                 lettersInFormula.get(k),
-                                explained.get(k),
-                                k + 1));
+                                explained.get(k)));
                 break;
             }
         }
@@ -435,15 +514,15 @@ public final class Ft19FormulasChecker {
         return null;
     }
 
-    private static List<String> checkUnitMixingAndNbsp(String fullScan, List<ParagraphInfo> paragraphs) {
+    /**
+     * Единицы и NBSP — только по объединённому тексту абзацев с OMML-формулами (не по всему документу).
+     */
+    private static List<String> checkUnitMixingAndNbspInFormulaText(
+            String formulaScan, List<ParagraphInfo> paragraphs, List<Integer> formulaIndices) {
         List<String> issues = new ArrayList<>();
-        String scan = fullScan != null ? fullScan : "";
+        String scan = formulaScan != null ? formulaScan : "";
         if (scan.isEmpty()) {
-            for (ParagraphInfo p : paragraphs) {
-                if (p.getText() != null) {
-                    scan += p.getText() + "\n";
-                }
-            }
+            return issues;
         }
 
         Set<String> usedRu = new LinkedHashSet<>();
@@ -462,11 +541,13 @@ public final class Ft19FormulasChecker {
             issues.add(
                     String.format(
                             Locale.ROOT,
-                            "ФТ-19: %s — в документе смешаны русские и международные обозначения единиц "
-                                    + "(рус.: %s; межд.: %s). Как исправить: используйте везде один вариант по ГОСТ.",
+                            "ФТ-19: %s — в абзацах с формулами (OMML) одновременно встречаются русские и международные обозначения единиц измерения "
+                                    + "(рус.: %s; межд.: %s). Проверка выполняется только по тексту таких абзацев (всего абзацев с формулой: %d). "
+                                    + "Как исправить: выберите один стиль обозначений (русские или SI) и примените его ко всем числам с единицами в формульных строках.",
                             REQ,
                             shortenList(usedRu, 8),
-                            shortenList(usedSi, 8)));
+                            shortenList(usedSi, 8),
+                            formulaIndices.size()));
         }
 
         Matcher nb = NUMBER_THEN_KNOWN_UNIT.matcher(scan);
@@ -474,18 +555,42 @@ public final class Ft19FormulasChecker {
         while (nb.find() && nbspHits < 8) {
             String sep = nb.group(2);
             if (sep != null && sep.indexOf(' ') >= 0) {
+                String frag = shorten(nb.group(0), 50);
+                int ord = findFormulaOrdinalContaining(nb.group(0), paragraphs, formulaIndices);
+                String loc =
+                        ord > 0
+                                ? String.format(
+                                        Locale.ROOT,
+                                        "формула №%d (абзац документа №%d, стр. %s)",
+                                        ord,
+                                        formulaIndices.get(ord - 1) + 1,
+                                        formatPage(paragraphs.get(formulaIndices.get(ord - 1)).getPageIndex()))
+                                : "в одном из абзацев с формулой";
                 issues.add(
                         String.format(
                                 Locale.ROOT,
-                                "ФТ-19: %s — между числом и обозначением единицы измерения нужен неразрывный пробел, а не обычный "
-                                        + "(фрагмент: «%s»). Как исправить: замените пробел на неразрывный (Ctrl+Shift+Space в Word).",
+                                "ФТ-19: %s — %s: между числом и обозначением единицы из известного перечня нужен неразрывный пробел (U+00A0), а не обычный пробел "
+                                        + "(фрагмент в тексте формульного абзаца: «%s»). "
+                                        + "Как исправить: в Word поставьте курсор между числом и единицей и вставьте неразрывный пробел (Ctrl+Shift+Space).",
                                 REQ,
-                                shorten(nb.group(0), 50)));
+                                loc,
+                                frag));
                 nbspHits++;
             }
         }
 
         return issues;
+    }
+
+    /** В каком по счёту фрагменте «число + единица» встретилась строка (по вхождению подстроки в текст абзаца). */
+    private static int findFormulaOrdinalContaining(String match, List<ParagraphInfo> paragraphs, List<Integer> formulaIndices) {
+        for (int o = 0; o < formulaIndices.size(); o++) {
+            String t = paragraphs.get(formulaIndices.get(o)).getText();
+            if (t != null && t.contains(match)) {
+                return o + 1;
+            }
+        }
+        return 0;
     }
 
     /** Обнаружить «число + пробел(ы) + единица» для пары рус/межд. */

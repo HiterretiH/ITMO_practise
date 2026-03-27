@@ -4,6 +4,7 @@ import com.example.backend.check.Ft8MainFontChecker;
 import com.example.backend.exception.ValidationException;
 import com.example.backend.domain.*;
 import com.example.backend.util.DocumentFileValidator;
+import com.example.backend.util.OfficeMathDetector;
 import com.example.backend.util.PageLocator;
 import org.apache.poi.ooxml.POIXMLTypeLoader;
 import org.apache.poi.hwpf.HWPFDocument;
@@ -11,6 +12,9 @@ import org.apache.poi.hwpf.usermodel.Paragraph;
 import org.apache.poi.hwpf.usermodel.Range;
 import org.apache.poi.xwpf.model.XWPFHeaderFooterPolicy;
 import org.apache.poi.xwpf.usermodel.*;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTLvl;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTAbstractNum;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTNumPr;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTJc;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTPageMar;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTPageNumber;
@@ -294,7 +298,7 @@ public class DocxLoadService {
     private ParagraphInfo mapParagraph(
             XWPFParagraph xp, Integer pageIndex, boolean inTable, Integer tableRowIndex, Integer tableColumnIndex) {
         String text = xp.getText();
-        boolean hasFormula = paragraphContainsOfficeMath(xp);
+        boolean hasFormula = OfficeMathDetector.paragraphContainsOfficeMath(xp);
         ParagraphStyleSnapshot style = new ParagraphStyleSnapshot();
 
         if (xp.getCTP().getPPr() != null) {
@@ -424,6 +428,24 @@ public class DocxLoadService {
 
         boolean ooxmlDiscretionaryHyphen = paragraphXmlHasDiscretionaryHyphenMarks(xp);
 
+        Integer numberingNumId = null;
+        Integer numberingIlvl = null;
+        if (xp.getCTP().getPPr() != null && xp.getCTP().getPPr().isSetNumPr()) {
+            CTNumPr numPr = xp.getCTP().getPPr().getNumPr();
+            if (numPr != null) {
+                if (numPr.isSetNumId() && numPr.getNumId() != null) {
+                    numberingNumId = numPr.getNumId().getVal().intValue();
+                }
+                if (numPr.isSetIlvl() && numPr.getIlvl() != null) {
+                    numberingIlvl = numPr.getIlvl().getVal().intValue();
+                }
+            }
+        }
+        boolean numberingListParagraph = numberingNumId != null;
+        String listNumberingFmt = numberingListParagraph ? resolveListNumberingFmt(xp) : null;
+        boolean numberingListBullet =
+                numberingListParagraph && listNumberingFmt != null && "bullet".equalsIgnoreCase(listNumberingFmt);
+
         return ParagraphInfo.builder()
                 .text(text)
                 .styleId(paragraphStyleId)
@@ -446,6 +468,11 @@ public class DocxLoadService {
                 .inTable(inTable)
                 .tableRowIndex(tableRowIndex)
                 .tableColumnIndex(tableColumnIndex)
+                .numberingListParagraph(numberingListParagraph)
+                .numberingNumId(numberingNumId)
+                .numberingIlvl(numberingIlvl)
+                .numberingListBullet(numberingListBullet)
+                .listNumberingFmt(listNumberingFmt)
                 .containsFormula(hasFormula)
                 .ooxmlDiscretionaryHyphenMarks(ooxmlDiscretionaryHyphen)
                 .runFontViolatesTnr(runFontViolatesTnr)
@@ -455,6 +482,65 @@ public class DocxLoadService {
                 .ft8NonCompliantSizesFound(joinLimited(badSizes, 5))
                 .ft8NonBlackColorsFound(joinLimited(badColors, 5))
                 .build();
+    }
+
+    /**
+     * Значение {@code w:numFmt} для уровня списка абзаца (decimal, bullet, …). Для ФТ-20/ФТ-21.
+     */
+    private static String resolveListNumberingFmt(XWPFParagraph xp) {
+        if (xp.getCTP().getPPr() == null || !xp.getCTP().getPPr().isSetNumPr()) {
+            return null;
+        }
+        try {
+            XWPFDocument doc = xp.getDocument();
+            if (doc == null) {
+                return null;
+            }
+            XWPFNumbering numbering = doc.getNumbering();
+            if (numbering == null) {
+                return null;
+            }
+            BigInteger numId = xp.getNumID();
+            if (numId == null) {
+                return null;
+            }
+            XWPFNum num = numbering.getNum(numId);
+            if (num == null) {
+                return null;
+            }
+            BigInteger absId = num.getCTNum().getAbstractNumId().getVal();
+            XWPFAbstractNum abs = numbering.getAbstractNum(absId);
+            if (abs == null) {
+                return null;
+            }
+            CTAbstractNum ctAbs = abs.getCTAbstractNum();
+            int ilvl = 0;
+            CTNumPr np = xp.getCTP().getPPr().getNumPr();
+            if (np != null && np.isSetIlvl() && np.getIlvl() != null) {
+                ilvl = np.getIlvl().getVal().intValue();
+            }
+            CTLvl lvl = null;
+            if (ctAbs != null && ilvl >= 0 && ilvl < ctAbs.sizeOfLvlArray()) {
+                lvl = ctAbs.getLvlArray(ilvl);
+            }
+            if (lvl == null && ctAbs != null && ctAbs.sizeOfLvlArray() > 0) {
+                lvl = ctAbs.getLvlArray(0);
+            }
+            if (lvl == null || !lvl.isSetNumFmt() || lvl.getNumFmt().getVal() == null) {
+                return null;
+            }
+            return lvl.getNumFmt().getVal().toString();
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    /**
+     * Формат уровня списка — маркер (bullet), а не арабские цифры и т.п. (для ФТ-20 и др.).
+     */
+    private static boolean isBulletListParagraph(XWPFParagraph xp) {
+        String fmt = resolveListNumberingFmt(xp);
+        return fmt != null && "bullet".equalsIgnoreCase(fmt);
     }
 
     private static String joinLimited(Set<String> values, int max) {
@@ -585,12 +671,6 @@ public class DocxLoadService {
         }
         String szCs = xmlAttrFromTag(xml, "szCs", "val");
         return halfPointsToPt(szCs);
-    }
-
-    /** Формулы Word: Office Math ({@code m:oMath}). */
-    private static boolean paragraphContainsOfficeMath(XWPFParagraph xp) {
-        String xml = xp.getCTP().xmlText();
-        return xml != null && (xml.contains("m:oMath") || xml.contains("oMathPara"));
     }
 
     /**

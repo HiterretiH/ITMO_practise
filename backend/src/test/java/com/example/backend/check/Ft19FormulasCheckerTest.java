@@ -21,7 +21,7 @@ class Ft19FormulasCheckerTest {
     void noIssues_whenNoFormulas() {
         List<ParagraphInfo> paras = List.of(
                 ParagraphInfo.builder().text("Текст").build());
-        assertTrue(Ft19FormulasChecker.check(paras, "Текст").isEmpty());
+        assertTrue(Ft19FormulasChecker.check(paras).isEmpty());
     }
 
     @Test
@@ -32,8 +32,19 @@ class Ft19FormulasCheckerTest {
         paras.add(ParagraphInfo.builder().text("E\t(1)").containsFormula(true).build());
         paras.add(ParagraphInfo.builder().text("").build());
         paras.add(ParagraphInfo.builder().text("Конец").build());
-        List<String> issues = Ft19FormulasChecker.check(paras, "Введение E Конец");
+        List<String> issues = Ft19FormulasChecker.check(paras);
         assertEquals(1, issues.stream().filter(s -> s.contains("ссылк")).count());
+    }
+
+    @Test
+    void issue_whenCyrillicProseOnSameLineAsFormula() {
+        List<ParagraphInfo> paras = List.of(
+                ParagraphInfo.builder()
+                        .text("Из этого следует формула E\t(1)")
+                        .containsFormula(true)
+                        .build());
+        List<String> issues = Ft19FormulasChecker.check(paras);
+        assertTrue(issues.stream().anyMatch(s -> s.contains("отдельную строку")));
     }
 
     @Test
@@ -43,23 +54,25 @@ class Ft19FormulasCheckerTest {
         paras.add(ParagraphInfo.builder().text("").build());
         paras.add(ParagraphInfo.builder().text("E\t(1)").containsFormula(true).build());
         paras.add(ParagraphInfo.builder().text("").build());
-        List<String> issues = Ft19FormulasChecker.check(paras, "См. (1) далее E");
+        List<String> issues = Ft19FormulasChecker.check(paras);
         assertTrue(issues.stream().noneMatch(s -> s.contains("ссылк")));
     }
 
     @Test
     void issue_unitMixing() {
         String scan = "длина 10 мм и 10 mm";
-        List<ParagraphInfo> paras = List.of(ParagraphInfo.builder().text(scan).build());
-        List<String> issues = Ft19FormulasChecker.check(paras, scan);
-        assertTrue(issues.stream().anyMatch(s -> s.contains("смешаны")));
+        List<ParagraphInfo> paras =
+                List.of(ParagraphInfo.builder().text(scan).containsFormula(true).build());
+        List<String> issues = Ft19FormulasChecker.check(paras);
+        assertTrue(issues.stream().anyMatch(s -> s.contains("русские") && s.contains("международные")));
     }
 
     @Test
     void issue_regularSpaceBeforeUnit() {
         String scan = "масса 5 кг";
-        List<ParagraphInfo> paras = List.of(ParagraphInfo.builder().text(scan).build());
-        List<String> issues = Ft19FormulasChecker.check(paras, scan);
+        List<ParagraphInfo> paras =
+                List.of(ParagraphInfo.builder().text(scan).containsFormula(true).build());
+        List<String> issues = Ft19FormulasChecker.check(paras);
         assertTrue(issues.stream().anyMatch(s -> s.contains("неразрывный")));
     }
 
@@ -68,7 +81,7 @@ class Ft19FormulasCheckerTest {
     void noNbspFalsePositive_forTocOrSectionTitles() {
         String scan = "1 Контекст 6 Выводы 1 Определение 2 Яйца 52 Шлюшка";
         List<ParagraphInfo> paras = List.of(ParagraphInfo.builder().text(scan).build());
-        List<String> issues = Ft19FormulasChecker.check(paras, scan);
+        List<String> issues = Ft19FormulasChecker.check(paras);
         assertTrue(issues.stream().noneMatch(s -> s.contains("неразрывный")));
     }
 }

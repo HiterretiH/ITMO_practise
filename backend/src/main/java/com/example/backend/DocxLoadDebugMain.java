@@ -14,7 +14,10 @@ import com.example.backend.check.Ft14TableCaptionChecker;
 import com.example.backend.check.Ft15AppendixChecker;
 import com.example.backend.check.Ft16OptionalStructuralElementsChecker;
 import com.example.backend.check.Ft17AbbreviationsListChecker;
+import com.example.backend.check.Ft18TermsDefinitionsChecker;
 import com.example.backend.check.Ft19FormulasChecker;
+import com.example.backend.check.Ft20BibliographyChecker;
+import com.example.backend.check.Ft21ListsEnumerationChecker;
 import com.example.backend.domain.DocumentPageSettings;
 import com.example.backend.domain.DocumentStructure;
 import com.example.backend.domain.FigureInfo;
@@ -273,9 +276,32 @@ public class DocxLoadDebugMain {
             log.info("  {}", line);
         }
 
-        List<String> ft19 = Ft19FormulasChecker.check(paragraphs, structure.getFullText());
-        log.info("ФТ-19 (п. 4.7: формулы — ссылки, где, единицы, неразрывный пробел), замечаний: {}", ft19.size());
+        log.info("{}", Ft18TermsDefinitionsChecker.formatSectionDiagnostics(paragraphs, tables));
+        List<String> ft18 = Ft18TermsDefinitionsChecker.check(paragraphs, tables);
+        log.info("ФТ-18 (п. 4.9.2: термины и определения — заголовок «СПИСОК СОКРАЩЕНИЙ…»; абзацы или таблица 2×N), замечаний: {}", ft18.size());
+        for (String line : ft18) {
+            log.info("  {}", line);
+        }
+
+        List<String> ft19 = Ft19FormulasChecker.check(paragraphs);
+        log.info("ФТ-19 (п. 4.7: формулы — отдельная строка, ссылки, где, единицы, неразрывный пробел), замечаний: {}", ft19.size());
         for (String line : ft19) {
+            log.info("  {}", line);
+        }
+
+        log.info("{}", Ft20BibliographyChecker.formatSectionDiagnostics(paragraphs, structure.getFullText()));
+        for (String line : Ft20BibliographyChecker.formatCitationMatrixLines(paragraphs, structure.getFullText())) {
+            log.info("{}", line);
+        }
+        List<String> ft20 = Ft20BibliographyChecker.check(paragraphs, structure.getFullText());
+        log.info("ФТ-20 (п. 4.10: список источников — заголовок, нумерация, соответствие ссылок [n]), замечаний: {}", ft20.size());
+        for (String line : ft20) {
+            log.info("  {}", line);
+        }
+
+        List<String> ft21 = Ft21ListsEnumerationChecker.check(paragraphs);
+        log.info("ФТ-21 (списки Word: маркеры, отступ, ;/., мелкие пункты), замечаний: {}", ft21.size());
+        for (String line : ft21) {
             log.info("  {}", line);
         }
 
