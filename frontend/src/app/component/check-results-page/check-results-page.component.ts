@@ -127,4 +127,27 @@ export class CheckResultsPageComponent implements OnInit {
     }
     return 'pi pi-minus-circle severity-icon severity-icon--unknown';
   }
+
+  /** Совпадает с подписью типа в PDF (ReportService.errorTypeRu). */
+  errorTypeLabel(type: string | undefined): string {
+    if (!type) {
+      return '—';
+    }
+    const labels: Record<string, string> = {
+      MISSING_SECTION: 'Отсутствует раздел',
+      FONT_MISMATCH: 'Неверный шрифт',
+      MARGIN_MISMATCH: 'Неверные поля страницы',
+      LINE_SPACING_ERROR: 'Неверный межстрочный интервал',
+      INDENT_ERROR: 'Неверный абзацный отступ',
+      HEADER_STYLE_ERROR: 'Оформление заголовка',
+      PAGE_NUMBER_MISSING: 'Нумерация страниц',
+      TABLE_CAPTION_ERROR: 'Подпись таблицы',
+      FIGURE_CAPTION_ERROR: 'Подпись рисунка',
+      CONTENT_TITLE_MISMATCH: 'Содержание / заголовки',
+      INVALID_LIST_FORMAT: 'Оформление списка',
+      FORMULA_ERROR: 'Оформление формулы',
+      CITATION_ERROR: 'Ссылки и источники',
+    };
+    return labels[type] ?? type;
+  }
 }

@@ -124,6 +124,7 @@
                   </div>
                 </td>
                 <td class="errors-col-desc">
+                  <div class="error-type-title">{{ errorTypeLabel(row.type) }}</div>
                   <div class="desc">{{ row.description }}</div>
                   @if (row.expected || row.actual) {
                     <div class="muted small">

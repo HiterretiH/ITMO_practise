@@ -265,6 +265,14 @@
   margin-top: 0.25rem;
 }
 
+.error-type-title {
+  font-weight: 700;
+  font-size: 0.95rem;
+  line-height: 1.3;
+  margin-bottom: 0.35rem;
+  color: var(--p-text-color);
+}
+
 .desc {
   line-height: 1.45;
 }
