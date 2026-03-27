@@ -1,5 +1,4 @@
 import { CommonModule } from '@angular/common';
-import { HttpErrorResponse } from '@angular/common/http';
 import { AfterViewInit, Component, inject, ViewChild } from '@angular/core';
 import { Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
@@ -104,7 +103,7 @@ export class UploadPageComponent implements AfterViewInit {
         });
         void this.router.navigate(['/results']);
       },
-      error: (err: HttpErrorResponse) => {
+      error: (err: unknown) => {
         this.loading = false;
         this.syncUploadButtonColors();
         this.messages.add({

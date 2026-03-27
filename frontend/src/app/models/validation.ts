@@ -37,3 +37,13 @@ export interface ErrorResponse {
   code: string;
   message: string;
 }
+
+export interface ValidateJobCreatedResponse {
+  job_id: string;
+}
+
+export interface ValidateJobStatusResponse {
+  status: 'pending' | 'completed' | 'failed';
+  result?: ValidationResult;
+  message?: string;
+}
