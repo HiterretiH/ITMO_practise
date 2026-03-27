@@ -1,2 +1,3 @@
-# В этом файле будут храниться правила проверки оформления ВКР (НФТ-9, НФТ-10).
+# Устарело: правила ФТ и параметры проверок задаются в classpath:checks-config.json
+# (см. application.properties — vkr.checks.resource).
 

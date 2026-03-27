@@ -1,11 +1,11 @@
 package com.example.backend.check;
 
+import com.example.backend.config.checks.CheckSession;
 import com.example.backend.domain.ParagraphInfo;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
@@ -16,13 +16,6 @@ import java.util.regex.Pattern;
  * {@code outlineLvl=0}.
  */
 public final class Ft4RequiredSectionsChecker {
-
-    private static final Set<String> FIXED_SECTION_TITLES = Set.of(
-            "СОДЕРЖАНИЕ",
-            "ВВЕДЕНИЕ",
-            "ЗАКЛЮЧЕНИЕ",
-            "СПИСОК ИСПОЛЬЗОВАННЫХ ИСТОЧНИКОВ"
-    );
 
     /** Буква приложения (А, Б, …): без \\b в конце — для кириллицы надёжнее. */
     private static final Pattern APPENDIX_HEADING = Pattern.compile(
@@ -42,7 +35,7 @@ public final class Ft4RequiredSectionsChecker {
     public static List<String> check(List<ParagraphInfo> paragraphs) {
         List<String> issues = new ArrayList<>();
 
-        for (String title : FIXED_SECTION_TITLES) {
+        for (String title : CheckSession.ft4().fixedSectionTitles()) {
             Found f = findBodyOutlineHeading(paragraphs, title);
             if (f == null) {
                 issues.add("ФТ-4: в тексте не найден обязательный раздел «" + title + "» (заголовок уровня 0).");

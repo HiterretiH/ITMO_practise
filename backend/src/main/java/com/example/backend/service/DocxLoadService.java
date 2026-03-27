@@ -1,11 +1,13 @@
 package com.example.backend.service;
 
 import com.example.backend.check.Ft8MainFontChecker;
+import com.example.backend.check.Ft8RuleParams;
 import com.example.backend.exception.ValidationException;
 import com.example.backend.domain.*;
 import com.example.backend.util.DocumentFileValidator;
 import com.example.backend.util.OfficeMathDetector;
 import com.example.backend.util.PageLocator;
+import org.apache.poi.ooxml.POIXMLException;
 import org.apache.poi.ooxml.POIXMLTypeLoader;
 import org.apache.poi.hwpf.HWPFDocument;
 import org.apache.poi.hwpf.usermodel.Paragraph;
@@ -182,6 +184,10 @@ public class DocxLoadService {
                     .format("docx")
                     .build();
         } catch (IOException e) {
+            throw new ValidationException("Не удалось прочитать документ .docx: " + e.getMessage());
+        } catch (POIXMLException e) {
+            throw new ValidationException("Не удалось прочитать документ .docx: " + e.getMessage());
+        } catch (org.apache.poi.openxml4j.exceptions.NotOfficeXmlFileException e) {
             throw new ValidationException("Не удалось прочитать документ .docx: " + e.getMessage());
         }
     }
@@ -379,6 +385,7 @@ public class DocxLoadService {
         LinkedHashSet<String> badFonts = new LinkedHashSet<>();
         LinkedHashSet<String> badSizes = new LinkedHashSet<>();
         LinkedHashSet<String> badColors = new LinkedHashSet<>();
+        Ft8RuleParams ft8RuleParams = Ft8RuleParams.defaults();
         for (XWPFRun run : xp.getRuns()) {
             String rt = run.getText(0);
             if (rt == null || rt.isEmpty()) {
@@ -397,7 +404,8 @@ public class DocxLoadService {
                 badFonts.add(effFont.trim());
             }
             if (effSize != null) {
-                if (effSize + 0.05 < 12.0 || effSize > 14.0 + 0.05) {
+                if (effSize + ft8RuleParams.ptEps() < ft8RuleParams.minPt()
+                        || effSize > ft8RuleParams.maxRecommendedPt() + ft8RuleParams.ptEps()) {
                     runFontSizeViolates = true;
                     badSizes.add(String.format(Locale.ROOT, "%.2f pt", effSize));
                 }

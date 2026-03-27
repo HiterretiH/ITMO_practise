@@ -1,5 +1,6 @@
 package com.example.backend.check;
 
+import com.example.backend.config.checks.CheckSession;
 import com.example.backend.domain.ParagraphInfo;
 
 import java.util.ArrayList;
@@ -13,16 +14,13 @@ import java.util.Locale;
  */
 public final class Ft9MainParagraphChecker {
 
-    private static final double LINE_EXPECTED = 1.5;
-    private static final double LINE_EPS = 0.06;
-    private static final double INDENT_CM_EXPECTED = 1.25;
-    private static final double INDENT_CM_EPS = 0.2;
     private static final int MAX_ISSUES = 100;
 
     private Ft9MainParagraphChecker() {
     }
 
     public static List<String> check(List<ParagraphInfo> paragraphs) {
+        Ft9ParagraphParams rp = CheckSession.ft9();
         List<String> issues = new ArrayList<>();
         for (int i = 0; i < paragraphs.size(); i++) {
             ParagraphInfo p = paragraphs.get(i);
@@ -36,27 +34,27 @@ public final class Ft9MainParagraphChecker {
             String preview = Ft8MainFontChecker.paragraphTextPreview(p);
 
             Double line = p.getLineSpacing();
-            if (line != null && Math.abs(line - LINE_EXPECTED) > LINE_EPS) {
+            if (line != null && Math.abs(line - rp.lineSpacing()) > rp.lineSpacingEps()) {
                 if (issues.size() >= MAX_ISSUES) {
                     break;
                 }
                 issues.add(String.format(Locale.ROOT,
-                        "ФТ-9: %s межстрочный интервал (п. 4.2) — ожидается 1,5; фактически %.2f (%s).%s",
-                        loc, line, describeSpacingVersusNorm(line), preview));
+                        "ФТ-9: %s межстрочный интервал (п. 4.2) — ожидается %s; фактически %.2f (%s).%s",
+                        loc, formatHalf(rp.lineSpacing()), line, describeSpacingVersusNorm(line, rp), preview));
             }
 
             if (issues.size() >= MAX_ISSUES) {
                 break;
             }
             Double fi = p.getFirstLineIndentCm();
-            if (fi != null && Math.abs(fi - INDENT_CM_EXPECTED) > INDENT_CM_EPS) {
+            if (fi != null && Math.abs(fi - rp.firstLineIndentCm()) > rp.firstLineIndentEps()) {
                 if (issues.size() >= MAX_ISSUES) {
                     break;
                 }
-                double delta = fi - INDENT_CM_EXPECTED;
+                double delta = fi - rp.firstLineIndentCm();
                 issues.add(String.format(Locale.ROOT,
-                        "ФТ-9: %s красная строка / абзацный отступ (п. 4.2) — ожидается 1,25 см; фактически %.2f см (отклонение %+0.2f см).%s",
-                        loc, fi, delta, preview));
+                        "ФТ-9: %s красная строка / абзацный отступ (п. 4.2) — ожидается %.2f см; фактически %.2f см (отклонение %+.2f см).%s",
+                        loc, rp.firstLineIndentCm(), fi, delta, preview));
             }
 
             if (issues.size() >= MAX_ISSUES) {
@@ -75,14 +73,21 @@ public final class Ft9MainParagraphChecker {
         return issues;
     }
 
-    private static String describeSpacingVersusNorm(double line) {
-        if (line < LINE_EXPECTED - LINE_EPS) {
-            return "интервал меньше требуемого 1,5";
+    private static String formatHalf(double lineSpacing) {
+        if (Math.abs(lineSpacing - 1.5) < 0.01) {
+            return "1,5";
         }
-        if (line > LINE_EXPECTED + LINE_EPS) {
-            return "интервал больше требуемого 1,5";
+        return String.format(Locale.ROOT, "%.2f", lineSpacing).replace('.', ',');
+    }
+
+    private static String describeSpacingVersusNorm(double line, Ft9ParagraphParams rp) {
+        if (line < rp.lineSpacing() - rp.lineSpacingEps()) {
+            return "интервал меньше требуемого " + formatHalf(rp.lineSpacing());
         }
-        return "отличается от 1,5";
+        if (line > rp.lineSpacing() + rp.lineSpacingEps()) {
+            return "интервал больше требуемого " + formatHalf(rp.lineSpacing());
+        }
+        return "отличается от " + formatHalf(rp.lineSpacing());
     }
 
     private static String alignmentHumanRu(String alignment) {

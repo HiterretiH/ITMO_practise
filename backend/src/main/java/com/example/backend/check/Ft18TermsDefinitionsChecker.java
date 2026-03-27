@@ -1,7 +1,6 @@
 package com.example.backend.check;
 
-
-
+import com.example.backend.config.checks.CheckSession;
 import com.example.backend.domain.ParagraphInfo;
 
 import com.example.backend.domain.TableInfo;
@@ -54,10 +53,6 @@ public final class Ft18TermsDefinitionsChecker {
 
 
 
-    private static final String SECTION_TITLE = "СПИСОК СОКРАЩЕНИЙ И УСЛОВНЫХ ОБОЗНАЧЕНИЙ";
-
-
-
     private static final String V1 = "вариант 1 (список абзацами)";
 
 
@@ -98,12 +93,12 @@ public final class Ft18TermsDefinitionsChecker {
      */
     public static String formatSectionDiagnostics(List<ParagraphInfo> paragraphs, List<TableInfo> tables) {
         if (paragraphs == null || paragraphs.isEmpty()) {
-            return "ФТ-18: нет абзацев — раздел «" + SECTION_TITLE + "» не искался.";
+            return "ФТ-18: нет абзацев — раздел «" + CheckSession.ft18().sectionTitle() + "» не искался.";
         }
         Integer h = findSectionHeadingIndex(paragraphs);
         if (h == null) {
             return "ФТ-18: раздел «"
-                    + SECTION_TITLE
+                    + CheckSession.ft18().sectionTitle()
                     + "» не найден: нет абзаца с таким текстом заголовка (учитываются точка/двоеточие в конце; "
                     + "дополнительно ищется совпадение по тексту, если нет outline level 0).";
         }
@@ -255,7 +250,7 @@ public final class Ft18TermsDefinitionsChecker {
 
                             + " — раздел «"
 
-                            + SECTION_TITLE
+                            + CheckSession.ft18().sectionTitle()
 
                             + "» пуст: сразу начинается следующий раздел. "
 
@@ -315,7 +310,7 @@ public final class Ft18TermsDefinitionsChecker {
 
                             + " — в разделе «"
 
-                            + SECTION_TITLE
+                            + CheckSession.ft18().sectionTitle()
 
                             + "» нет ни одной непустой строки. "
 
@@ -617,7 +612,7 @@ public final class Ft18TermsDefinitionsChecker {
 
                             + " — не найдена таблица Word, пересекающаяся с разделом «"
 
-                            + SECTION_TITLE
+                            + CheckSession.ft18().sectionTitle()
 
                             + "». "
 
@@ -995,7 +990,7 @@ public final class Ft18TermsDefinitionsChecker {
 
             }
 
-            if (SECTION_TITLE.equals(normalizeTitle(p.getText()))) {
+            if (CheckSession.ft18().sectionTitle().equals(normalizeTitle(p.getText()))) {
 
                 return i;
 
@@ -1007,7 +1002,7 @@ public final class Ft18TermsDefinitionsChecker {
 
             ParagraphInfo p = paragraphs.get(i);
 
-            if (SECTION_TITLE.equals(normalizeTitle(p.getText()))) {
+            if (CheckSession.ft18().sectionTitle().equals(normalizeTitle(p.getText()))) {
 
                 return i;
 

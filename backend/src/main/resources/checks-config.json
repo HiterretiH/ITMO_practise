@@ -1,0 +1,197 @@
+{
+  "schemaVersion": 1,
+  "rules": [
+    {
+      "id": "ft4",
+      "enabled": true,
+      "title": "Обязательные разделы",
+      "description": "Наличие обязательных структурных разделов ВКР, заголовки прописными.",
+      "reference": "ФТ-4, п. 3.2 ТЗ",
+      "params": {
+        "fixedSectionTitles": [
+          "СОДЕРЖАНИЕ",
+          "ВВЕДЕНИЕ",
+          "ЗАКЛЮЧЕНИЕ",
+          "СПИСОК ИСПОЛЬЗОВАННЫХ ИСТОЧНИКОВ"
+        ]
+      }
+    },
+    {
+      "id": "ft5",
+      "enabled": true,
+      "title": "Нумерация глав и подразделов",
+      "description": "Согласованность нумерации разделов и подразделов.",
+      "reference": "ФТ-5"
+    },
+    {
+      "id": "ft6",
+      "enabled": true,
+      "title": "Начало разделов с новой страницы",
+      "description": "Выбранные заголовки должны начинаться с новой страницы (оценка по разрывам).",
+      "reference": "ФТ-6",
+      "params": {
+        "fixedSectionTitles": [
+          "СОДЕРЖАНИЕ",
+          "ВВЕДЕНИЕ",
+          "ЗАКЛЮЧЕНИЕ",
+          "СПИСОК ИСПОЛЬЗОВАННЫХ ИСТОЧНИКОВ"
+        ]
+      }
+    },
+    {
+      "id": "ft7",
+      "enabled": true,
+      "title": "Содержание",
+      "description": "Стили TOC, отточия, номера страниц, соответствие заголовкам в теле.",
+      "reference": "ФТ-7",
+      "params": {
+        "tocSectionTitles": ["СОДЕРЖАНИЕ", "ОГЛАВЛЕНИЕ"]
+      }
+    },
+    {
+      "id": "ft8",
+      "enabled": true,
+      "title": "Шрифт основного текста",
+      "description": "Times New Roman, 12–14 pt, чёрный цвет для основного текста.",
+      "reference": "ФТ-8, п. 4.2",
+      "params": {
+        "minPt": 12.0,
+        "maxRecommendedPt": 14.0,
+        "ptEps": 0.05
+      }
+    },
+    {
+      "id": "ft9",
+      "enabled": true,
+      "title": "Абзацы основного текста",
+      "description": "Интервал 1,5; отступ 1,25 см; выравнивание по ширине.",
+      "reference": "ФТ-9, п. 4.2",
+      "params": {
+        "lineSpacing": 1.5,
+        "lineSpacingEps": 0.06,
+        "firstLineIndentCm": 1.25,
+        "firstLineIndentEps": 0.2
+      }
+    },
+    {
+      "id": "ft10",
+      "enabled": true,
+      "title": "Поля страницы",
+      "description": "Левое 30 мм; правое 10–15 мм; верх/низ 20 мм.",
+      "reference": "ФТ-10, п. 4.2",
+      "params": {
+        "leftCm": 3.0,
+        "rightMinCm": 1.0,
+        "rightMaxCm": 1.5,
+        "topCm": 2.0,
+        "bottomCm": 2.0,
+        "epsCm": 0.05
+      }
+    },
+    {
+      "id": "ft11",
+      "enabled": true,
+      "title": "Оформление заголовков разделов",
+      "description": "Единый стиль глав, подразделы, точка, переносы, аббревиатуры, отступ.",
+      "reference": "ФТ-11, п. 4.4.4",
+      "params": {
+        "firstLineIndentCmExpected": 1.25,
+        "firstLineIndentEps": 0.35
+      }
+    },
+    {
+      "id": "ft12",
+      "enabled": true,
+      "title": "Нумерация страниц",
+      "description": "Сквозная нумерация, внизу по центру, без точки после номера.",
+      "reference": "ФТ-12, п. 4.3.1"
+    },
+    {
+      "id": "ft13",
+      "enabled": true,
+      "title": "Подписи к рисункам",
+      "description": "«Рисунок N – …», под рисунком, по центру.",
+      "reference": "ФТ-13, п. 4.5.3"
+    },
+    {
+      "id": "ft14",
+      "enabled": true,
+      "title": "Заголовки таблиц",
+      "description": "«Таблица N – …» над таблицей слева; настоящая таблица Word.",
+      "reference": "ФТ-14, п. 4.6.3"
+    },
+    {
+      "id": "ft15",
+      "enabled": true,
+      "title": "Приложения",
+      "description": "«ПРИЛОЖЕНИЕ А» наверху страницы, по центру.",
+      "reference": "ФТ-15, п. 4.11.2"
+    },
+    {
+      "id": "ft16",
+      "enabled": true,
+      "title": "Дополнительные структурные разделы",
+      "description": "Сокращения, термины, иллюстративный материал по содержанию.",
+      "reference": "ФТ-16, п. 3.2",
+      "params": {
+        "optionalSectionTitles": [
+          "СПИСОК СОКРАЩЕНИЙ И УСЛОВНЫХ ОБОЗНАЧЕНИЙ",
+          "ТЕРМИНЫ И ОПРЕДЕЛЕНИЯ",
+          "СПИСОК ИЛЛЮСТРАТИВНОГО МАТЕРИАЛА"
+        ]
+      }
+    },
+    {
+      "id": "ft17",
+      "enabled": true,
+      "title": "Список сокращений",
+      "description": "Абзацы или таблица 2×N.",
+      "reference": "ФТ-17, п. 4.8.4",
+      "logDiagnostics": true,
+      "params": {
+        "sectionTitle": "СПИСОК СОКРАЩЕНИЙ И УСЛОВНЫХ ОБОЗНАЧЕНИЙ"
+      }
+    },
+    {
+      "id": "ft18",
+      "enabled": true,
+      "title": "Термины и определения",
+      "description": "Оформление раздела терминов.",
+      "reference": "ФТ-18, п. 4.9.2",
+      "logDiagnostics": true,
+      "params": {
+        "sectionTitle": "ТЕРМИНЫ И ОПРЕДЕЛЕНИЯ"
+      }
+    },
+    {
+      "id": "ft19",
+      "enabled": true,
+      "title": "Формулы",
+      "description": "Отдельная строка, ссылки, единицы, неразрывный пробел.",
+      "reference": "ФТ-19, п. 4.7"
+    },
+    {
+      "id": "ft20",
+      "enabled": true,
+      "title": "Список источников",
+      "description": "Заголовок, нумерация, соответствие ссылок [n].",
+      "reference": "ФТ-20, п. 4.10",
+      "logDiagnostics": true,
+      "params": {
+        "sectionTitle": "СПИСОК ИСПОЛЬЗОВАННЫХ ИСТОЧНИКОВ"
+      }
+    },
+    {
+      "id": "ft21",
+      "enabled": true,
+      "title": "Списки и перечисления",
+      "description": "Маркеры Word, отступы, ; / . для уровня 0, единообразие.",
+      "reference": "ФТ-21, Приложение 1 / п. 3.2",
+      "params": {
+        "indentCmExpected": 1.25,
+        "indentCmEpsilon": 0.35,
+        "indentMinCm": 0.75
+      }
+    }
+  ]
+}

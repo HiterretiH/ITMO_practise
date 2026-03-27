@@ -1,11 +1,11 @@
 package com.example.backend.check;
 
+import com.example.backend.config.checks.CheckSession;
 import com.example.backend.domain.ParagraphInfo;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
@@ -21,13 +21,6 @@ import java.util.regex.Pattern;
  * «только XML» или в редакторе без обновления полей — парсер не узнает реальную разбивку на страницы.
  */
 public final class Ft6SectionStartChecker {
-
-    private static final Set<String> FIXED_SECTION_TITLES = Set.of(
-            "СОДЕРЖАНИЕ",
-            "ВВЕДЕНИЕ",
-            "ЗАКЛЮЧЕНИЕ",
-            "СПИСОК ИСПОЛЬЗОВАННЫХ ИСТОЧНИКОВ"
-    );
 
     private static final Pattern APPENDIX_HEADING = Pattern.compile(
             "^ПРИЛОЖЕНИЕ\\s+[А-ЯA-Z]\\b.*",
@@ -73,7 +66,7 @@ public final class Ft6SectionStartChecker {
         if (t.isEmpty()) {
             return false;
         }
-        if (FIXED_SECTION_TITLES.contains(t)) {
+        if (CheckSession.ft6().fixedSectionTitles().contains(t)) {
             return true;
         }
         if (APPENDIX_HEADING.matcher(t).matches()) {

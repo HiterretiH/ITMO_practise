@@ -1,5 +1,6 @@
 package com.example.backend.check;
 
+import com.example.backend.config.checks.CheckSession;
 import com.example.backend.domain.DocumentPageSettings;
 import com.example.backend.domain.PageMargins;
 import com.example.backend.domain.ParagraphInfo;
@@ -19,12 +20,6 @@ import java.util.Locale;
  */
 public final class Ft10PageMarginsChecker {
 
-    private static final double LEFT_CM = 3.0;
-    private static final double RIGHT_MIN_CM = 1.0;
-    private static final double RIGHT_MAX_CM = 1.5;
-    private static final double TOP_CM = 2.0;
-    private static final double BOTTOM_CM = 2.0;
-    private static final double EPS_CM = 0.05;
     private static final int MAX_ISSUES = 80;
 
     private Ft10PageMarginsChecker() {
@@ -38,7 +33,7 @@ public final class Ft10PageMarginsChecker {
         List<String> issues = new ArrayList<>();
         if (pageSettings == null || pageSettings.getSections() == null || pageSettings.getSections().isEmpty()) {
             String loc = formatWholeDocumentLocation(paragraphs);
-            collectIssuesForMargins(issues, documentMargins, loc);
+            collectIssuesForMargins(issues, documentMargins, loc, CheckSession.ft10());
             return issues;
         }
 
@@ -56,7 +51,7 @@ public final class Ft10PageMarginsChecker {
             }
             String loc = formatSectionLocation(
                     i, n, partitionOk, paragraphs, sectPrParagraphIndices, docLastPage);
-            collectIssuesForMargins(issues, mg, loc);
+            collectIssuesForMargins(issues, mg, loc, CheckSession.ft10());
         }
         return issues;
     }
@@ -179,7 +174,7 @@ public final class Ft10PageMarginsChecker {
                 i, nSections, paraRange, pageRangeText);
     }
 
-    private static void collectIssuesForMargins(List<String> issues, PageMargins m, String location) {
+    private static void collectIssuesForMargins(List<String> issues, PageMargins m, String location, Ft10MarginsParams mp) {
         if (issues.size() >= MAX_ISSUES) {
             return;
         }
@@ -189,29 +184,29 @@ public final class Ft10PageMarginsChecker {
                     location));
             return;
         }
-        String s = checkLeft(m.getLeftCm());
+        String s = checkLeft(m.getLeftCm(), mp);
         if (s != null && issues.size() < MAX_ISSUES) {
             issues.add(String.format(Locale.ROOT, "ФТ-10: %s — %s", location, s));
         }
-        s = checkRight(m.getRightCm());
+        s = checkRight(m.getRightCm(), mp);
         if (s != null && issues.size() < MAX_ISSUES) {
             issues.add(String.format(Locale.ROOT, "ФТ-10: %s — %s", location, s));
         }
-        s = checkTop(m.getTopCm());
+        s = checkTop(m.getTopCm(), mp);
         if (s != null && issues.size() < MAX_ISSUES) {
             issues.add(String.format(Locale.ROOT, "ФТ-10: %s — %s", location, s));
         }
-        s = checkBottom(m.getBottomCm());
+        s = checkBottom(m.getBottomCm(), mp);
         if (s != null && issues.size() < MAX_ISSUES) {
             issues.add(String.format(Locale.ROOT, "ФТ-10: %s — %s", location, s));
         }
     }
 
-    private static String checkLeft(Double cm) {
+    private static String checkLeft(Double cm, Ft10MarginsParams mp) {
         if (cm == null) {
             return "левое поле — нет данных в документе; ожидается 30 мм (п. 4.2).";
         }
-        if (Math.abs(cm - LEFT_CM) > EPS_CM) {
+        if (Math.abs(cm - mp.leftCm()) > mp.epsCm()) {
             return String.format(Locale.ROOT,
                     "левое поле (п. 4.2) — ожидается 30 мм; фактически %.1f мм (%.2f см).",
                     cm * 10.0, cm);
@@ -219,11 +214,11 @@ public final class Ft10PageMarginsChecker {
         return null;
     }
 
-    private static String checkRight(Double cm) {
+    private static String checkRight(Double cm, Ft10MarginsParams mp) {
         if (cm == null) {
             return "правое поле — нет данных в документе; ожидается 10–15 мм (п. 4.2).";
         }
-        if (cm < RIGHT_MIN_CM - EPS_CM || cm > RIGHT_MAX_CM + EPS_CM) {
+        if (cm < mp.rightMinCm() - mp.epsCm() || cm > mp.rightMaxCm() + mp.epsCm()) {
             return String.format(Locale.ROOT,
                     "правое поле (п. 4.2) — ожидается 10–15 мм; фактически %.1f мм (%.2f см).",
                     cm * 10.0, cm);
@@ -231,11 +226,11 @@ public final class Ft10PageMarginsChecker {
         return null;
     }
 
-    private static String checkTop(Double cm) {
+    private static String checkTop(Double cm, Ft10MarginsParams mp) {
         if (cm == null) {
             return "верхнее поле — нет данных в документе; ожидается 20 мм (п. 4.2).";
         }
-        if (Math.abs(cm - TOP_CM) > EPS_CM) {
+        if (Math.abs(cm - mp.topCm()) > mp.epsCm()) {
             return String.format(Locale.ROOT,
                     "верхнее поле (п. 4.2) — ожидается 20 мм; фактически %.1f мм (%.2f см).",
                     cm * 10.0, cm);
@@ -243,11 +238,11 @@ public final class Ft10PageMarginsChecker {
         return null;
     }
 
-    private static String checkBottom(Double cm) {
+    private static String checkBottom(Double cm, Ft10MarginsParams mp) {
         if (cm == null) {
             return "нижнее поле — нет данных в документе; ожидается 20 мм (п. 4.2).";
         }
-        if (Math.abs(cm - BOTTOM_CM) > EPS_CM) {
+        if (Math.abs(cm - mp.bottomCm()) > mp.epsCm()) {
             return String.format(Locale.ROOT,
                     "нижнее поле (п. 4.2) — ожидается 20 мм; фактически %.1f мм (%.2f см).",
                     cm * 10.0, cm);

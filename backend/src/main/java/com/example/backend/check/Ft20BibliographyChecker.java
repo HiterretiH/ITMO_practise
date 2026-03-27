@@ -1,5 +1,6 @@
 package com.example.backend.check;
 
+import com.example.backend.config.checks.CheckSession;
 import com.example.backend.domain.ParagraphInfo;
 
 import java.util.ArrayList;
@@ -28,8 +29,6 @@ public final class Ft20BibliographyChecker {
 
     private static final String REQ = "п. 4.10 — список использованных источников";
 
-    private static final String SECTION_TITLE = "СПИСОК ИСПОЛЬЗОВАННЫХ ИСТОЧНИКОВ";
-
     private static final int MAX_ISSUES = 50;
 
     private static final Pattern BRACKET_CITE = Pattern.compile("\\[(\\d+)\\]");
@@ -45,11 +44,11 @@ public final class Ft20BibliographyChecker {
      */
     public static String formatSectionDiagnostics(List<ParagraphInfo> paragraphs, String fullText) {
         if (paragraphs == null || paragraphs.isEmpty()) {
-            return "ФТ-20: нет абзацев — раздел «" + SECTION_TITLE + "» не искался.";
+            return "ФТ-20: нет абзацев — раздел «" + CheckSession.ft20().sectionTitle() + "» не искался.";
         }
         Integer h = findSectionHeadingIndex(paragraphs);
         if (h == null) {
-            return "ФТ-20: раздел «" + SECTION_TITLE + "» не найден (заголовок уровня 0 или совпадение по тексту).";
+            return "ФТ-20: раздел «" + CheckSession.ft20().sectionTitle() + "» не найден (заголовок уровня 0 или совпадение по тексту).";
         }
         int next = findNextOutline0HeadingIndex(paragraphs, h);
         BibEntriesResult parsed = parseBibliographyEntries(paragraphs, h + 1, next);
@@ -90,7 +89,7 @@ public final class Ft20BibliographyChecker {
                     "ФТ-20: "
                             + REQ
                             + " — не найден заголовок раздела «"
-                            + SECTION_TITLE
+                            + CheckSession.ft20().sectionTitle()
                             + "» (ожидается заголовок уровня 0 или совпадение текста без учёта регистра).");
             return issues;
         }
@@ -297,13 +296,13 @@ public final class Ft20BibliographyChecker {
             if (!isBodyOutlineLevel0(p)) {
                 continue;
             }
-            if (SECTION_TITLE.equals(normalizeTitle(p.getText()))) {
+            if (CheckSession.ft20().sectionTitle().equals(normalizeTitle(p.getText()))) {
                 return i;
             }
         }
         for (int i = 0; i < paragraphs.size(); i++) {
             ParagraphInfo p = paragraphs.get(i);
-            if (SECTION_TITLE.equals(normalizeTitle(p.getText()))) {
+            if (CheckSession.ft20().sectionTitle().equals(normalizeTitle(p.getText()))) {
                 return i;
             }
         }

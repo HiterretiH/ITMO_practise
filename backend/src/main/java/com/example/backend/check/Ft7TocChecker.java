@@ -1,5 +1,6 @@
 package com.example.backend.check;
 
+import com.example.backend.config.checks.CheckSession;
 import com.example.backend.domain.ParagraphInfo;
 
 import java.util.ArrayList;
@@ -21,11 +22,6 @@ import java.util.regex.Pattern;
  * что ровно одно из этих слов есть в документе как заголовок раздела оглавления (один раз).
  */
 public final class Ft7TocChecker {
-
-    private static final Set<String> TOC_SECTION_TITLES = Set.of(
-            "СОДЕРЖАНИЕ",
-            "ОГЛАВЛЕНИЕ"
-    );
 
     private static final Pattern LINE_WITH_LEADER = Pattern.compile(
             "^(?<title>.+?)(?<leader>\\s*[\\.…\u2026·﹒\u00B7]{2,}|\\t+)\\s*(?<page>\\d{1,4})\\s*$",
@@ -160,7 +156,7 @@ public final class Ft7TocChecker {
         List<String> out = new ArrayList<>();
         for (TocParsedLine line : block.lines()) {
             String key = normalizeCompareKey(line.titleText());
-            if (!key.isEmpty() && !TOC_SECTION_TITLES.contains(key)) {
+            if (!key.isEmpty() && !CheckSession.ft7().normalizedTitleKeys().contains(key)) {
                 out.add(key);
             }
         }
@@ -509,7 +505,7 @@ public final class Ft7TocChecker {
     }
 
     private static boolean isTocSectionTitle(String normalizedUppercase) {
-        return TOC_SECTION_TITLES.contains(normalizedUppercase);
+        return CheckSession.ft7().normalizedTitleKeys().contains(normalizedUppercase);
     }
 
     private static boolean shouldStopTocBlock(ParagraphInfo p) {

@@ -1,5 +1,6 @@
 package com.example.backend.check;
 
+import com.example.backend.config.checks.CheckSession;
 import com.example.backend.domain.ParagraphInfo;
 
 import java.util.ArrayList;
@@ -12,9 +13,6 @@ import java.util.Locale;
  */
 public final class Ft8MainFontChecker {
 
-    private static final double MIN_PT = 12.0;
-    private static final double MAX_RECOMMENDED_PT = 14.0;
-    private static final double PT_EPS = 0.05;
     private static final int MAX_ISSUES = 100;
     private static final int TEXT_PREVIEW_MAX = 90;
 
@@ -22,6 +20,7 @@ public final class Ft8MainFontChecker {
     }
 
     public static List<String> check(List<ParagraphInfo> paragraphs) {
+        Ft8RuleParams rp = CheckSession.ft8();
         List<String> issues = new ArrayList<>();
         for (int i = 0; i < paragraphs.size(); i++) {
             ParagraphInfo p = paragraphs.get(i);
@@ -68,20 +67,20 @@ public final class Ft8MainFontChecker {
             } else {
                 Double fs = p.getFontSizePt();
                 if (fs != null) {
-                    if (fs + PT_EPS < MIN_PT) {
+                    if (fs + rp.ptEps() < rp.minPt()) {
                         if (issues.size() >= MAX_ISSUES) {
                             break;
                         }
                         issues.add(String.format(Locale.ROOT,
-                                "ФТ-8: %s кегль (п. 4.2) — не менее 12 pt; по абзацу получается %.2f pt (слишком мелко).%s",
-                                loc, fs, preview));
-                    } else if (fs > MAX_RECOMMENDED_PT + PT_EPS) {
+                                "ФТ-8: %s кегль (п. 4.2) — не менее %.0f pt; по абзацу получается %.2f pt (слишком мелко).%s",
+                                loc, rp.minPt(), fs, preview));
+                    } else if (fs > rp.maxRecommendedPt() + rp.ptEps()) {
                         if (issues.size() >= MAX_ISSUES) {
                             break;
                         }
                         issues.add(String.format(Locale.ROOT,
-                                "ФТ-8: %s кегль (п. 4.2) — рекомендуется 14 pt; по абзацу получается %.2f pt (крупнее нормы).%s",
-                                loc, fs, preview));
+                                "ФТ-8: %s кегль (п. 4.2) — рекомендуется %.0f pt; по абзацу получается %.2f pt (крупнее нормы).%s",
+                                loc, rp.maxRecommendedPt(), fs, preview));
                     }
                 }
             }

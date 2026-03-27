@@ -1,5 +1,6 @@
 package com.example.backend.check;
 
+import com.example.backend.config.checks.CheckSession;
 import com.example.backend.domain.ParagraphInfo;
 
 import java.util.ArrayList;
@@ -23,8 +24,6 @@ import java.util.regex.Pattern;
  */
 public final class Ft11HeadingFormattingChecker {
 
-    private static final double FIRST_LINE_INDENT_CM_EXPECTED = 1.25;
-    private static final double FIRST_LINE_INDENT_EPS = 0.35;
     private static final int MAX_ISSUES = 120;
 
     private static final Pattern SUBSECTION_NUM = Pattern.compile(
@@ -262,16 +261,17 @@ public final class Ft11HeadingFormattingChecker {
     }
 
     private static void checkFirstLineIndent(List<String> issues, String label, int index, ParagraphInfo p) {
+        Ft11HeadingParams hp = CheckSession.ft11();
         Double fl = p.getFirstLineIndentCm();
         Double li = p.getLeftIndentCm();
         if (fl == null && li == null) {
             return;
         }
         boolean ok = false;
-        if (fl != null && Math.abs(fl - FIRST_LINE_INDENT_CM_EXPECTED) <= FIRST_LINE_INDENT_EPS) {
+        if (fl != null && Math.abs(fl - hp.firstLineIndentCmExpected()) <= hp.firstLineIndentEps()) {
             ok = true;
         }
-        if (!ok && li != null && Math.abs(li - FIRST_LINE_INDENT_CM_EXPECTED) <= FIRST_LINE_INDENT_EPS) {
+        if (!ok && li != null && Math.abs(li - hp.firstLineIndentCmExpected()) <= hp.firstLineIndentEps()) {
             ok = true;
         }
         if (ok) {
@@ -281,7 +281,7 @@ public final class Ft11HeadingFormattingChecker {
             addIssue(issues, String.format(Locale.ROOT,
                     "ФТ-11: %s, абз. #%d — заголовок должен начинаться с абзацного отступа ~%.2f см (п. 4.4.4). "
                             + "В абзаце: отступ первой строки=%s см, левый отступ=%s см.",
-                    label, index, FIRST_LINE_INDENT_CM_EXPECTED,
+                    label, index, hp.firstLineIndentCmExpected(),
                     fl == null ? "не задан" : String.format(Locale.ROOT, "%.2f", fl),
                     li == null ? "не задан" : String.format(Locale.ROOT, "%.2f", li)));
         }

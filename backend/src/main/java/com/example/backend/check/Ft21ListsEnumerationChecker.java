@@ -1,5 +1,6 @@
 package com.example.backend.check;
 
+import com.example.backend.config.checks.CheckSession;
 import com.example.backend.domain.ParagraphInfo;
 
 import java.util.ArrayList;
@@ -25,24 +26,22 @@ public final class Ft21ListsEnumerationChecker {
 
     private static final String REQ = "п. Приложение 1 — перечисления и списки";
 
+    /** Лимит сообщений за прогон (технический порог, не из ТЗ). */
     private static final int MAX_ISSUES = 80;
-
-    /** Ожидаемый абзацный отступ основного текста (см. ФТ-9), допуск. */
-    private static final double INDENT_CM_EXPECTED = 1.25;
-
-    private static final double INDENT_CM_EPS = 0.35;
-
-    /** Минимальный суммарный отступ слева / красная строка, чтобы не ругаться на «нет отступа». */
-    private static final double INDENT_MIN_CM = 0.75;
 
     private Ft21ListsEnumerationChecker() {
     }
 
     public static List<String> check(List<ParagraphInfo> paragraphs) {
+        return check(paragraphs, CheckSession.ft21());
+    }
+
+    public static List<String> check(List<ParagraphInfo> paragraphs, Ft21ListParams params) {
         List<String> issues = new ArrayList<>();
         if (paragraphs == null || paragraphs.isEmpty()) {
             return issues;
         }
+        Ft21ListParams p = params != null ? params : Ft21ListParams.defaults();
 
         List<List<Integer>> runs = splitListRuns(paragraphs);
         int runOrdinal = 0;
@@ -81,14 +80,14 @@ public final class Ft21ListsEnumerationChecker {
 
             List<Integer> level0 = new ArrayList<>();
             for (int idx : run) {
-                ParagraphInfo p = paragraphs.get(idx);
-                int ilvl = p.getNumberingIlvl() != null ? p.getNumberingIlvl() : 0;
+                ParagraphInfo par = paragraphs.get(idx);
+                int ilvl = par.getNumberingIlvl() != null ? par.getNumberingIlvl() : 0;
                 if (ilvl == 0) {
                     level0.add(idx);
                 }
             }
-            checkIndentsForLevel0(issues, paragraphs, level0, listCtx);
-            checkPunctuationLevel0(issues, paragraphs, level0, listCtx);
+            checkIndentsForLevel0(issues, paragraphs, level0, listCtx, p);
+            checkPunctuationLevel0(issues, paragraphs, level0, listCtx, p);
         }
 
         return issues;
@@ -162,7 +161,11 @@ public final class Ft21ListsEnumerationChecker {
     }
 
     private static void checkIndentsForLevel0(
-            List<String> issues, List<ParagraphInfo> paragraphs, List<Integer> level0, String listCtx) {
+            List<String> issues,
+            List<ParagraphInfo> paragraphs,
+            List<Integer> level0,
+            String listCtx,
+            Ft21ListParams params) {
         for (int idx : level0) {
             if (issues.size() >= MAX_ISSUES) {
                 return;
@@ -174,10 +177,10 @@ public final class Ft21ListsEnumerationChecker {
                 continue;
             }
             boolean ok =
-                    (fi != null && fi >= INDENT_MIN_CM)
-                            || (li != null && li >= INDENT_MIN_CM)
+                    (fi != null && fi >= params.indentMinCm())
+                            || (li != null && li >= params.indentMinCm())
                             || (fi != null
-                                    && Math.abs(fi - INDENT_CM_EXPECTED) <= INDENT_CM_EPS
+                                    && Math.abs(fi - params.indentCmExpected()) <= params.indentCmEpsilon()
                                     && li != null
                                     && li >= 0.3);
             if (!ok) {
@@ -191,7 +194,7 @@ public final class Ft21ListsEnumerationChecker {
                                 listCtx,
                                 idx + 1,
                                 formatPage(p.getPageIndex()),
-                                INDENT_CM_EXPECTED,
+                                params.indentCmExpected(),
                                 fi == null ? "нет" : String.format(Locale.ROOT, "%.2f", fi),
                                 li == null ? "нет" : String.format(Locale.ROOT, "%.2f", li)));
             }
@@ -203,7 +206,11 @@ public final class Ft21ListsEnumerationChecker {
      * ниже порога относительно медианы и максимума.
      */
     private static void checkPunctuationLevel0(
-            List<String> issues, List<ParagraphInfo> paragraphs, List<Integer> level0, String listCtx) {
+            List<String> issues,
+            List<ParagraphInfo> paragraphs,
+            List<Integer> level0,
+            String listCtx,
+            Ft21ListParams params) {
         if (level0.size() <= 1) {
             return;
         }

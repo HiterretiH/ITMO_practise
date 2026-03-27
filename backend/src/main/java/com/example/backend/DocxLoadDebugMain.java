@@ -1,23 +1,9 @@
 package com.example.backend;
 
-import com.example.backend.check.Ft4RequiredSectionsChecker;
-import com.example.backend.check.Ft5SectionNumberingChecker;
-import com.example.backend.check.Ft6SectionStartChecker;
-import com.example.backend.check.Ft7TocChecker;
-import com.example.backend.check.Ft8MainFontChecker;
-import com.example.backend.check.Ft9MainParagraphChecker;
-import com.example.backend.check.Ft10PageMarginsChecker;
-import com.example.backend.check.Ft11HeadingFormattingChecker;
-import com.example.backend.check.Ft12PageNumberingChecker;
-import com.example.backend.check.Ft13FigureCaptionChecker;
-import com.example.backend.check.Ft14TableCaptionChecker;
-import com.example.backend.check.Ft15AppendixChecker;
-import com.example.backend.check.Ft16OptionalStructuralElementsChecker;
-import com.example.backend.check.Ft17AbbreviationsListChecker;
-import com.example.backend.check.Ft18TermsDefinitionsChecker;
-import com.example.backend.check.Ft19FormulasChecker;
-import com.example.backend.check.Ft20BibliographyChecker;
-import com.example.backend.check.Ft21ListsEnumerationChecker;
+import com.example.backend.check.runner.CheckExecutionResult;
+import com.example.backend.check.runner.VkrChecksRunner;
+import com.example.backend.config.checks.ChecksConfigurationLoader;
+import com.example.backend.config.checks.ChecksConfigRoot;
 import com.example.backend.domain.DocumentPageSettings;
 import com.example.backend.domain.DocumentStructure;
 import com.example.backend.domain.FigureInfo;
@@ -183,126 +169,20 @@ public class DocxLoadDebugMain {
             );
         }
 
-        List<String> ft4 = Ft4RequiredSectionsChecker.check(paragraphs);
-        log.info("ФТ-4 (обязательные разделы, прописные заголовки), замечаний: {}", ft4.size());
-        for (String line : ft4) {
-            log.info("  {}", line);
-        }
-
-        List<String> ft5 = Ft5SectionNumberingChecker.check(paragraphs);
-        log.info("ФТ-5 (нумерация глав и подразделов), замечаний: {}", ft5.size());
-        for (String line : ft5) {
-            log.info("  {}", line);
-        }
-
-        List<String> ft6 = Ft6SectionStartChecker.check(paragraphs);
-        log.info("ФТ-6 (начало с новой страницы), найдено замечаний: {}", ft6.size());
-        for (String line : ft6) {
-            log.info("  {}", line);
-        }
-        if (ft6.isEmpty()) {
-            log.info("  (замечаний по выбранным заголовкам нет — см. ограничения оценки страниц в PageLocator)");
-        }
-
-        List<String> ft7 = Ft7TocChecker.check(paragraphs);
-        log.info("ФТ-7 (содержание: стили TOC, отточия, страницы, соответствие заголовкам), сообщений: {}", ft7.size());
-        for (String line : ft7) {
-            log.info("  {}", line);
-        }
-
-        List<String> ft8 = Ft8MainFontChecker.check(paragraphs);
-        log.info("ФТ-8 (основной текст: шрифт Times New Roman, 12–14 pt, чёрный), замечаний: {}", ft8.size());
-        for (String line : ft8) {
-            log.info("  {}", line);
-        }
-
-        List<String> ft9 = Ft9MainParagraphChecker.check(paragraphs);
-        log.info("ФТ-9 (основной текст: интервал 1,5; отступ 1,25 см; по ширине), замечаний: {}", ft9.size());
-        for (String line : ft9) {
-            log.info("  {}", line);
-        }
-
-        List<String> ft10 = Ft10PageMarginsChecker.check(
-                pageSettings,
-                margins,
-                paragraphs,
-                structure.getSectPrParagraphIndices());
-        log.info("ФТ-10 (поля страницы: левое 30 мм; правое 10–15 мм; верх/низ по 20 мм, п. 4.2), замечаний: {}", ft10.size());
-        for (String line : ft10) {
-            log.info("  {}", line);
-        }
-
-        List<String> ft11 = Ft11HeadingFormattingChecker.check(paragraphs);
-        log.info("ФТ-11 (заголовки разделов и подразделов: единый стиль глав, подразделы, точка, переносы, аббревиатуры, отступ; п. 4.4.4), сообщений: {}", ft11.size());
-        for (String line : ft11) {
-            log.info("  {}", line);
-        }
-
-        List<String> ft12 = Ft12PageNumberingChecker.check(
-                pageSettings, paragraphs, structure.getSectPrParagraphIndices());
-        log.info("ФТ-12 (п. 4.3.1: постоянная сквозная нумерация, внизу по центру, без точки после номера), замечаний: {}", ft12.size());
-        for (String line : ft12) {
-            log.info("  {}", line);
-        }
-
-        List<String> ft13 = Ft13FigureCaptionChecker.check(figures, paragraphs);
-        log.info("ФТ-13 (п. 4.5.3: подпись «Рисунок N – …», под рисунком, по центру), замечаний: {}", ft13.size());
-        for (String line : ft13) {
-            log.info("  {}", line);
-        }
-
-        List<String> ft14 = Ft14TableCaptionChecker.check(tables, paragraphs);
-        log.info("ФТ-14 (п. 4.6.3: название «Таблица N – …» над таблицей слева; настоящая таблица Word), замечаний: {}", ft14.size());
-        for (String line : ft14) {
-            log.info("  {}", line);
-        }
-
-        List<String> ft15 = Ft15AppendixChecker.check(paragraphs);
-        log.info("ФТ-15 (п. 4.11.2: приложения; «ПРИЛОЖЕНИЕ А» наверху страницы, по центру), замечаний: {}", ft15.size());
-        for (String line : ft15) {
-            log.info("  {}", line);
-        }
-
-        List<String> ft16 = Ft16OptionalStructuralElementsChecker.check(paragraphs);
-        log.info("ФТ-16 (п. 3.2: доп. разделы по содержанию — список сокращений, термины, иллюстративный материал), замечаний: {}", ft16.size());
-        for (String line : ft16) {
-            log.info("  {}", line);
-        }
-
-        log.info("{}", Ft17AbbreviationsListChecker.formatSectionDiagnostics(paragraphs, tables));
-        List<String> ft17 = Ft17AbbreviationsListChecker.check(paragraphs, tables);
-        log.info("ФТ-17 (п. 4.8.4: список сокращений — один из двух вариантов: абзацы или таблица 2×N), замечаний: {}", ft17.size());
-        for (String line : ft17) {
-            log.info("  {}", line);
-        }
-
-        log.info("{}", Ft18TermsDefinitionsChecker.formatSectionDiagnostics(paragraphs, tables));
-        List<String> ft18 = Ft18TermsDefinitionsChecker.check(paragraphs, tables);
-        log.info("ФТ-18 (п. 4.9.2: термины и определения — заголовок «СПИСОК СОКРАЩЕНИЙ…»; абзацы или таблица 2×N), замечаний: {}", ft18.size());
-        for (String line : ft18) {
-            log.info("  {}", line);
-        }
-
-        List<String> ft19 = Ft19FormulasChecker.check(paragraphs);
-        log.info("ФТ-19 (п. 4.7: формулы — отдельная строка, ссылки, где, единицы, неразрывный пробел), замечаний: {}", ft19.size());
-        for (String line : ft19) {
-            log.info("  {}", line);
-        }
-
-        log.info("{}", Ft20BibliographyChecker.formatSectionDiagnostics(paragraphs, structure.getFullText()));
-        for (String line : Ft20BibliographyChecker.formatCitationMatrixLines(paragraphs, structure.getFullText())) {
-            log.info("{}", line);
-        }
-        List<String> ft20 = Ft20BibliographyChecker.check(paragraphs, structure.getFullText());
-        log.info("ФТ-20 (п. 4.10: список источников — заголовок, нумерация, соответствие ссылок [n]), замечаний: {}", ft20.size());
-        for (String line : ft20) {
-            log.info("  {}", line);
-        }
-
-        List<String> ft21 = Ft21ListsEnumerationChecker.check(paragraphs);
-        log.info("ФТ-21 (списки Word: маркеры, отступ, ;/., мелкие пункты), замечаний: {}", ft21.size());
-        for (String line : ft21) {
-            log.info("  {}", line);
+        ChecksConfigRoot checksConfig = ChecksConfigurationLoader.loadClasspath("checks-config.json");
+        List<CheckExecutionResult> checkResults = VkrChecksRunner.run(structure, checksConfig, log::info);
+        for (CheckExecutionResult r : checkResults) {
+            if (!r.ran()) {
+                log.info("ФТ {} — {}: отключено в checks-config.json", r.id(), r.title());
+                continue;
+            }
+            log.info("ФТ {} — {}, замечаний: {}", r.id(), r.title(), r.issues().size());
+            for (String line : r.issues()) {
+                log.info("  {}", line);
+            }
+            if ("ft6".equals(r.id()) && r.issues().isEmpty()) {
+                log.info("  (замечаний по выбранным заголовкам нет — см. ограничения оценки страниц в PageLocator)");
+            }
         }
 
         printPageEstimateAndAlignmentDiagnostic(paragraphs, pageSettings);

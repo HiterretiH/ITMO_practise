@@ -1,5 +1,6 @@
 package com.example.backend.check;
 
+import com.example.backend.config.checks.CheckSession;
 import com.example.backend.domain.ParagraphInfo;
 
 import java.util.ArrayList;
@@ -16,11 +17,6 @@ public final class Ft16OptionalStructuralElementsChecker {
 
     private static final String REQ = "п. 3.2 — дополнительные структурные элементы";
 
-    private static final List<String> OPTIONAL_SECTIONS = List.of(
-            "СПИСОК СОКРАЩЕНИЙ И УСЛОВНЫХ ОБОЗНАЧЕНИЙ",
-            "ТЕРМИНЫ И ОПРЕДЕЛЕНИЯ",
-            "СПИСОК ИЛЛЮСТРАТИВНОГО МАТЕРИАЛА");
-
     private Ft16OptionalStructuralElementsChecker() {
     }
 
@@ -34,7 +30,7 @@ public final class Ft16OptionalStructuralElementsChecker {
             return issues;
         }
 
-        for (String canonical : OPTIONAL_SECTIONS) {
+        for (String canonical : CheckSession.ft16().optionalSectionTitles()) {
             String c = normalizeTitle(canonical);
             if (!isListedInToc(tocKeys, c)) {
                 continue;
