@@ -36,6 +36,8 @@ export class UploadPageComponent implements AfterViewInit {
 
   @ViewChild('fileUpload') private fileUpload?: FileUpload;
 
+  readonly maxFileSizeBytes = 50 * 1024 * 1024;
+
   loading = false;
 
   uploadButtonProps: ButtonProps = { severity: 'secondary' };
