@@ -28,6 +28,7 @@ import org.openxmlformats.schemas.wordprocessingml.x2006.main.StylesDocument;
 import org.apache.poi.openxml4j.opc.OPCPackage;
 import org.apache.poi.openxml4j.opc.PackagePart;
 import org.apache.poi.openxml4j.opc.PackagingURIHelper;
+import org.apache.poi.openxml4j.util.ZipSecureFile;
 import org.apache.xmlbeans.XmlObject;
 import org.springframework.stereotype.Service;
 
@@ -68,6 +69,9 @@ public class DocxLoadService {
     /** Выравнивание по центру в {@code w:pPr} (для колонтитула с номером страницы). */
     private static final Pattern OOXML_JC_CENTER = Pattern.compile("<w:jc\\s[^>]*w:val=\"center\"", Pattern.CASE_INSENSITIVE);
     private static final int CAPTION_LINK_DISTANCE = 2;
+
+    private static final double POI_MIN_INFLATE_RATIO_FOR_DOCX = 0.001;
+
     public DocumentStructure load(String filename, String contentType, InputStream inputStream) {
         DocumentFileValidator.validate(filename, contentType);
         if (DocumentFileValidator.isDocx(filename)) {
@@ -80,6 +84,7 @@ public class DocxLoadService {
     }
 
     private DocumentStructure parseDocx(InputStream inputStream) {
+        ZipSecureFile.setMinInflateRatio(POI_MIN_INFLATE_RATIO_FOR_DOCX);
         try (XWPFDocument doc = new XWPFDocument(inputStream)) {
             List<ParagraphInfo> paragraphs = new ArrayList<>();
             List<TableInfo> tableInfos = new ArrayList<>();
@@ -429,9 +434,11 @@ public class DocxLoadService {
         }
         Integer outlineLevel = resolveParagraphOutlineLevel(xp);
 
+        Integer effectivePageIndex = null;
         Integer pageEnd = null;
         if (pageIndex != null) {
             pageEnd = PageLocator.paragraphEndPage(xp, pageIndex);
+            effectivePageIndex = PageLocator.paragraphStartPageForContent(xp, pageIndex);
         }
 
         boolean ooxmlDiscretionaryHyphen = paragraphXmlHasDiscretionaryHyphenMarks(xp);
@@ -471,7 +478,7 @@ public class DocxLoadService {
                 .lineSpacing(style.lineSpacing)
                 .firstLineIndentCm(style.firstLineIndentCm)
                 .leftIndentCm(style.leftIndentCm)
-                .pageIndex(pageIndex)
+                .pageIndex(effectivePageIndex)
                 .pageEndIndex(pageEnd)
                 .inTable(inTable)
                 .tableRowIndex(tableRowIndex)

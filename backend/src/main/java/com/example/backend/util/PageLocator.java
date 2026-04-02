@@ -39,6 +39,25 @@ public final class PageLocator {
         return end;
     }
 
+    /**
+     * Страница, с которой начинается видимый текст абзаца. Учитывает разрывы страницы в первых прогонах
+     * до первого непустого текста (типично после Ctrl+Enter в начале абзаца перед заголовком раздела).
+     * Без этого {@link #paragraphEndPage} и цепочка «следующий абзац» учитывают разрывы, а в {@code pageIndex}
+     * раньше попадало только наследуемое число — ФТ-6 ошибочно считал заголовок начинающимся на той же странице.
+     */
+    public static int paragraphStartPageForContent(XWPFParagraph p, int inheritedStartPage) {
+        int page = inheritedStartPage;
+        for (XWPFRun run : p.getRuns()) {
+            int adv = countPageAdvancesInRun(run);
+            String t = run.getText(0);
+            if (t != null && !t.replace('\u00A0', ' ').trim().isEmpty()) {
+                return page + adv;
+            }
+            page += adv;
+        }
+        return page;
+    }
+
     public static int countPageAdvancesInRun(XWPFRun run) {
         CTR ctr = run.getCTR();
         int n = 0;

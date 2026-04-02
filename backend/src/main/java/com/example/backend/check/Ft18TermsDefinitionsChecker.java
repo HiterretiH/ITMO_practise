@@ -1034,6 +1034,39 @@ public final class Ft18TermsDefinitionsChecker {
 
     }
 
+    /**
+     * Индексы абзацев <b>тела</b> раздела терминов (включительно), по тем же правилам, что и ФТ-18.
+     * {@code null}, если заголовок раздела не найден или между ним и следующим заголовком уровня 0 нет абзацев.
+     */
+    public static int[] termsDefinitionsBodyInclusiveIndexBounds(List<ParagraphInfo> paragraphs) {
+        if (paragraphs == null || paragraphs.isEmpty()) {
+            return null;
+        }
+        Integer h = findSectionHeadingIndex(paragraphs);
+        if (h == null) {
+            return null;
+        }
+        int next = findNextOutline0HeadingIndex(paragraphs, h);
+        int first = h + 1;
+        int last = next - 1;
+        if (first > last) {
+            return null;
+        }
+        return new int[] {first, last};
+    }
+
+    /**
+     * Абзацы между заголовком раздела терминов ({@link CheckSession#ft18()}) и следующим заголовком уровня 0
+     * оформляются по п. 4.9.2 (в т.ч. выравнивание по левому краю), а не как основной текст п. 4.2 — {@link Ft9MainParagraphChecker} их пропускает.
+     */
+    public static boolean isParagraphInTermsDefinitionsContent(List<ParagraphInfo> paragraphs, int index) {
+        if (paragraphs == null || index < 0 || index >= paragraphs.size()) {
+            return false;
+        }
+        int[] b = termsDefinitionsBodyInclusiveIndexBounds(paragraphs);
+        return b != null && index >= b[0] && index <= b[1];
+    }
+
 
 
     private static boolean isBodyOutlineLevel0(ParagraphInfo p) {

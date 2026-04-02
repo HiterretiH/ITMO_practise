@@ -22,9 +22,13 @@ public final class Ft9MainParagraphChecker {
     public static List<String> check(List<ParagraphInfo> paragraphs) {
         Ft9ParagraphParams rp = CheckSession.ft9();
         List<String> issues = new ArrayList<>();
+        int[] termsBody = Ft18TermsDefinitionsChecker.termsDefinitionsBodyInclusiveIndexBounds(paragraphs);
         for (int i = 0; i < paragraphs.size(); i++) {
             ParagraphInfo p = paragraphs.get(i);
             if (!BodyParagraphRules.isMainBodyTextForFormatting(p)) {
+                continue;
+            }
+            if (termsBody != null && i >= termsBody[0] && i <= termsBody[1]) {
                 continue;
             }
             if (issues.size() >= MAX_ISSUES) {
