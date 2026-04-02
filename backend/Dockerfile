@@ -1,4 +1,4 @@
-# Java 21 — соответствует toolchain в build.gradle (java { toolchain { languageVersion = 21 } })
+# JDK 21: build.gradle задаёт sourceCompatibility/targetCompatibility 21 (--release 21).
 FROM eclipse-temurin:21-jdk AS build
 WORKDIR /app
 COPY gradlew ./

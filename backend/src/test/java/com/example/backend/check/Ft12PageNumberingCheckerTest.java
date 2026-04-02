@@ -59,4 +59,28 @@ class Ft12PageNumberingCheckerTest {
                         settings, List.of(ParagraphInfo.builder().pageIndex(1).build()), List.of());
         assertTrue(issues.stream().noneMatch(s -> s.contains("не найдено поле PAGE")));
     }
+
+    @Test
+    void noEvenFooterIssue_whenDefaultFooterHasPageEvenPartWithoutPage() {
+        PageNumberingInfo num =
+                PageNumberingInfo.builder()
+                        .footerPageFieldPresent(true)
+                        .defaultFooterHasPageField(true)
+                        .footerPageParagraphCentered(true)
+                        .footerTrailingPeriodAfterPageSuspected(false)
+                        .pageNumberRestartInSections(false)
+                        .firstPageFooterPresent(false)
+                        .evenPageFooterPresent(true)
+                        .evenPageFooterHasPageField(false)
+                        .build();
+        DocumentPageSettings settings = DocumentPageSettings.builder().numbering(num).build();
+        List<String> issues =
+                Ft12PageNumberingChecker.check(
+                        settings,
+                        List.of(
+                                ParagraphInfo.builder().pageIndex(1).build(),
+                                ParagraphInfo.builder().pageIndex(2).build()),
+                        List.of());
+        assertTrue(issues.stream().noneMatch(s -> s.contains("чётных страниц")));
+    }
 }

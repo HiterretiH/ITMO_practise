@@ -125,12 +125,15 @@ public final class Ft12PageNumberingChecker {
         }
 
         if (n.isEvenPageFooterPresent() && !n.isEvenPageFooterHasPageField()) {
-            if (maxPage >= 2) {
+            // Основной подвал уже с PAGE, а «чётный» — пустая/лишняя часть в OOXML (часто LibreOffice при
+            // «одинаковое содержимое»): поле номера в default footer, на чётных страницах номер всё равно есть.
+            boolean skipEvenFooterIssue = n.isDefaultFooterHasPageField() && hasFooterPage;
+            if (!skipEvenFooterIssue && maxPage >= 2) {
                 String range = formatEvenPagesRange(maxPage);
                 add(issues,
                         "ФТ-12: " + REQ + " — отдельный подвал чётных страниц без поля PAGE "
                                 + "(стр. " + range + "; " + pagesHint + ").");
-            } else {
+            } else if (!skipEvenFooterIssue) {
                 add(issues,
                         "ФТ-12: " + REQ + " — отдельный подвал чётных страниц без поля PAGE (" + pagesHint + ").");
             }

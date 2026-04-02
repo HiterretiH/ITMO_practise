@@ -1022,13 +1022,13 @@ public class DocxLoadService {
                 defaultFooterHasPageField = footerPartHasPageField(def);
             }
             XWPFFooter first = policy.getFirstPageFooter();
-            firstPageFooterPresent = first != null;
-            if (firstPageFooterPresent) {
+            firstPageFooterPresent = first != null && !footerBodyMateriallyEmpty(first);
+            if (first != null) {
                 firstPageFooterHasPageField = footerPartHasPageField(first);
             }
             XWPFFooter even = policy.getEvenPageFooter();
-            evenPageFooterPresent = even != null;
-            if (evenPageFooterPresent) {
+            evenPageFooterPresent = even != null && !footerBodyMateriallyEmpty(even);
+            if (even != null) {
                 evenPageFooterHasPageField = footerPartHasPageField(even);
             }
         }
@@ -1054,6 +1054,28 @@ public class DocxLoadService {
                 .footerNotes(new ArrayList<>())
                 .footerPartCombinedTexts(footerCombined)
                 .build();
+    }
+
+    /**
+     * Подвал без видимого содержимого и без поля PAGE (пустой {@code w:footer} или только пустые абзацы).
+     * LibreOffice при «одинаковое содержимое» на чётных/нечётных всё равно может создать отдельную часть
+     * подвала в пакете — POI тогда даёт {@code getEvenPageFooter() != null}, хотя номер задаётся в default.
+     */
+    private static boolean footerBodyMateriallyEmpty(XWPFFooter f) {
+        if (f == null) {
+            return true;
+        }
+        List<XWPFParagraph> paras = collectParagraphsDeep(f);
+        for (XWPFParagraph p : paras) {
+            if (paragraphContainsPageNumberField(p)) {
+                return false;
+            }
+            String t = p.getText();
+            if (t != null && !t.trim().isEmpty()) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /** Текст подвала как его отдаёт POI (в т.ч. кеш полей, если Word его сохранил). */
