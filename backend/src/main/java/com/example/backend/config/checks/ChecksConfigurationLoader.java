@@ -1,6 +1,9 @@
 package com.example.backend.config.checks;
 
 import tools.jackson.databind.json.JsonMapper;
+import jakarta.annotation.PostConstruct;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
@@ -19,6 +22,8 @@ import java.util.Set;
  */
 @Component
 public class ChecksConfigurationLoader {
+
+    private static final Logger log = LoggerFactory.getLogger(ChecksConfigurationLoader.class);
 
     private static final Set<String> KNOWN_RULE_IDS = Set.of(
             "ft4",
@@ -47,8 +52,20 @@ public class ChecksConfigurationLoader {
     @Value("${vkr.checks.resource:classpath:checks-config.json}")
     private String resourceLocation;
 
+    /** Кэш: конфиг не меняется в рантайме; повторный парс JSON на каждую валидацию убран. */
+    private volatile ChecksConfigRoot cachedConfig;
+
     public ChecksConfigurationLoader(ResourceLoader resourceLoader) {
         this.resourceLoader = resourceLoader;
+    }
+
+    @PostConstruct
+    void warmCache() {
+        long t0 = System.nanoTime();
+        cachedConfig = loadFresh();
+        long ms = (System.nanoTime() - t0) / 1_000_000L;
+        int rules = cachedConfig.rules() != null ? cachedConfig.rules().size() : 0;
+        log.info("checks-config loaded once from {} ({} rules, {} ms)", resourceLocation, rules, ms);
     }
 
     /** Для {@link com.example.backend.DocxLoadDebugMain} и тестов без Spring. */
@@ -66,7 +83,23 @@ public class ChecksConfigurationLoader {
         }
     }
 
+    /**
+     * Конфигурация проверок (кэшируется после старта приложения).
+     */
     public ChecksConfigRoot load() {
+        ChecksConfigRoot c = cachedConfig;
+        if (c != null) {
+            return c;
+        }
+        synchronized (this) {
+            if (cachedConfig == null) {
+                cachedConfig = loadFresh();
+            }
+            return cachedConfig;
+        }
+    }
+
+    private ChecksConfigRoot loadFresh() {
         Resource resource = resourceLoader.getResource(resourceLocation);
         try (InputStream in = resource.getInputStream()) {
             ChecksConfigRoot root = MAPPER.readValue(in, ChecksConfigRoot.class);

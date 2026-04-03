@@ -5,6 +5,8 @@ import com.example.backend.json.ValidateJobCreatedResponse;
 import com.example.backend.json.ValidateJobStatusResponse;
 import com.example.backend.service.TaskQueueService;
 import com.example.backend.util.DocumentFileValidator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -19,12 +21,15 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.UUID;
 import java.util.concurrent.RejectedExecutionException;
 
 @RestController
 @RequestMapping("/v1")
 public class ValidateController {
+
+    private static final Logger log = LoggerFactory.getLogger(ValidateController.class);
 
     private final TaskQueueService taskQueueService;
 
@@ -49,10 +54,19 @@ public class ValidateController {
         Path temp = Files.createTempFile("vkr-", suffix);
         boolean submitted = false;
         try {
-            file.transferTo(temp);
+            long t0 = System.nanoTime();
+            long declaredSize = file.getSize();
+            Files.copy(file.getInputStream(), temp, StandardCopyOption.REPLACE_EXISTING);
+            long copyMs = (System.nanoTime() - t0) / 1_000_000L;
             UUID jobId = taskQueueService.submit(temp, filename, file.getContentType());
             submitted = true;
             temp = null;
+            log.info(
+                    "POST /v1/validate: file={} declaredSize={} copyMs={} jobId={} (response 202, work is async)",
+                    filename,
+                    declaredSize,
+                    copyMs,
+                    jobId);
             ValidateJobCreatedResponse body = ValidateJobCreatedResponse.builder()
                     .jobId(jobId.toString())
                     .build();

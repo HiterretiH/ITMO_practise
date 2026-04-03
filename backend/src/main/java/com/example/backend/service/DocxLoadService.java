@@ -30,6 +30,8 @@ import org.apache.poi.openxml4j.opc.PackagePart;
 import org.apache.poi.openxml4j.opc.PackagingURIHelper;
 import org.apache.poi.openxml4j.util.ZipSecureFile;
 import org.apache.xmlbeans.XmlObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -54,6 +56,8 @@ import java.util.regex.Pattern;
 @Service
 public class DocxLoadService {
 
+    private static final Logger log = LoggerFactory.getLogger(DocxLoadService.class);
+
     private static final double TWIPS_TO_CM = 1.0 / 567.0;
     private static final Pattern TABLE_CAPTION_PATTERN = Pattern.compile("^\\s*таблица\\b.*", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
     private static final Pattern FIGURE_CAPTION_PATTERN = Pattern.compile("^\\s*рисунок\\b.*", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
@@ -75,15 +79,18 @@ public class DocxLoadService {
     public DocumentStructure load(String filename, String contentType, InputStream inputStream) {
         DocumentFileValidator.validate(filename, contentType);
         if (DocumentFileValidator.isDocx(filename)) {
+            log.debug("doc load: format=docx file={}", filename);
             return parseDocx(inputStream);
         }
         if (DocumentFileValidator.isDoc(filename)) {
+            log.debug("doc load: format=doc file={}", filename);
             return parseDoc(inputStream);
         }
         throw new ValidationException("Недопустимый формат файла.");
     }
 
     private DocumentStructure parseDocx(InputStream inputStream) {
+        long t0 = System.nanoTime();
         ZipSecureFile.setMinInflateRatio(POI_MIN_INFLATE_RATIO_FOR_DOCX);
         try (XWPFDocument doc = new XWPFDocument(inputStream)) {
             List<ParagraphInfo> paragraphs = new ArrayList<>();
@@ -177,7 +184,7 @@ public class DocxLoadService {
             PageMargins margins = extractMargins(doc);
             DocumentPageSettings pageSettings = extractDocumentPageSettings(doc, collectedSectPrs);
             List<StyleDefinition> styleDefinitions = extractStyleDefinitions(doc);
-            return DocumentStructure.builder()
+            DocumentStructure built = DocumentStructure.builder()
                     .paragraphs(paragraphs)
                     .margins(margins)
                     .pageSettings(pageSettings)
@@ -188,6 +195,15 @@ public class DocxLoadService {
                     .fullText(fullText.toString().trim())
                     .format("docx")
                     .build();
+            long ms = (System.nanoTime() - t0) / 1_000_000L;
+            log.info(
+                    "docx POI parse done: paragraphs={} tables={} figures={} bodyElements~={} {}ms",
+                    paragraphs.size(),
+                    tableInfos.size(),
+                    figureInfos.size(),
+                    bodyIndex,
+                    ms);
+            return built;
         } catch (IOException e) {
             throw new ValidationException("Не удалось прочитать документ .docx: " + e.getMessage());
         } catch (POIXMLException e) {
@@ -1426,6 +1442,7 @@ public class DocxLoadService {
     }
 
     private DocumentStructure parseDoc(InputStream inputStream) {
+        long t0 = System.nanoTime();
         try (HWPFDocument doc = new HWPFDocument(inputStream)) {
             Range range = doc.getRange();
             List<ParagraphInfo> paragraphs = new ArrayList<>();
@@ -1441,13 +1458,16 @@ public class DocxLoadService {
                         .build());
             }
 
-            return DocumentStructure.builder()
+            DocumentStructure built = DocumentStructure.builder()
                     .paragraphs(paragraphs)
                     .tables(List.of())
                     .figures(List.of())
                     .fullText(fullText.toString().trim())
                     .format("doc")
                     .build();
+            long ms = (System.nanoTime() - t0) / 1_000_000L;
+            log.info("doc (binary) parse done: paragraphs={} {}ms", paragraphs.size(), ms);
+            return built;
         } catch (IOException e) {
             throw new ValidationException("Не удалось прочитать документ .doc: " + e.getMessage());
         }

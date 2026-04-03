@@ -27,6 +27,9 @@ import com.example.backend.domain.PageMargins;
 import com.example.backend.domain.ParagraphInfo;
 import com.example.backend.domain.TableInfo;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -37,6 +40,8 @@ import java.util.function.Consumer;
  * Запуск набора ФТ в порядке, заданном в {@code checks-config.json}, с учётом {@link CheckRuleDefinition#enabled()}.
  */
 public final class VkrChecksRunner {
+
+    private static final Logger log = LoggerFactory.getLogger(VkrChecksRunner.class);
 
     private VkrChecksRunner() {
     }
@@ -67,10 +72,18 @@ public final class VkrChecksRunner {
                 String id = rule.id() == null ? "" : rule.id().trim().toLowerCase(Locale.ROOT);
                 String title = rule.title() != null && !rule.title().isBlank() ? rule.title() : id;
                 if (!rule.enabled()) {
+                    if (log.isDebugEnabled()) {
+                        log.debug("check rule {} ({}) skipped (disabled)", id, title);
+                    }
                     out.add(new CheckExecutionResult(id, title, false, List.of()));
                     continue;
                 }
+                long tRule = System.nanoTime();
                 List<String> issues = runOne(id, rule, structure, paragraphs, tables, figures, fullText, margins, diagnosticsSink);
+                long ruleMs = (System.nanoTime() - tRule) / 1_000_000L;
+                if (log.isDebugEnabled()) {
+                    log.debug("check rule {} ({}) done in {} ms (issues={})", id, title, ruleMs, issues.size());
+                }
                 out.add(new CheckExecutionResult(id, title, true, issues));
             }
             return Collections.unmodifiableList(out);

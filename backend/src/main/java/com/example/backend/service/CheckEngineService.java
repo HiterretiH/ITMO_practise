@@ -12,6 +12,8 @@ import com.example.backend.json.ValidationResult;
 import com.example.backend.json.ValidationStatus;
 import com.example.backend.json.ValidationSummary;
 import com.example.backend.mapper.ValidationIssueMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -25,6 +27,8 @@ import java.util.List;
  */
 @Service
 public class CheckEngineService {
+
+    private static final Logger log = LoggerFactory.getLogger(CheckEngineService.class);
 
     private final DocxLoadService docxLoadService;
     private final ChecksConfigurationLoader checksConfigurationLoader;
@@ -44,8 +48,21 @@ public class CheckEngineService {
     }
 
     public ValidationResult validate(String filename, String contentType, InputStream inputStream) {
+        long t0 = System.nanoTime();
         DocumentStructure structure = docxLoadService.load(filename, contentType, inputStream);
+        long loadMs = (System.nanoTime() - t0) / 1_000_000L;
+
+        long t1 = System.nanoTime();
         List<CheckExecutionResult> results = VkrChecksRunner.run(structure, checksConfigurationLoader.load());
+        long checksMs = (System.nanoTime() - t1) / 1_000_000L;
+
+        log.info(
+                "validation pipeline: file={} load={}ms checks={}ms paragraphs={}",
+                filename,
+                loadMs,
+                checksMs,
+                structure.getParagraphs() != null ? structure.getParagraphs().size() : 0);
+
         List<String> rawIssues = new ArrayList<>();
         for (CheckExecutionResult r : results) {
             if (r.ran()) {

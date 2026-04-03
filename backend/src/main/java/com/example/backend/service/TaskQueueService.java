@@ -4,10 +4,14 @@ import com.example.backend.exception.ValidationException;
 import com.example.backend.json.ValidateJobStatusResponse;
 import com.example.backend.json.ValidationResult;
 import jakarta.annotation.PreDestroy;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -24,6 +28,8 @@ import java.util.concurrent.TimeUnit;
 
 @Service
 public class TaskQueueService {
+
+    private static final Logger log = LoggerFactory.getLogger(TaskQueueService.class);
 
     private final CheckEngineService checkEngineService;
     private final ThreadPoolExecutor executor;
@@ -56,6 +62,12 @@ public class TaskQueueService {
         UUID id = UUID.randomUUID();
         JobEntry entry = new JobEntry();
         jobs.put(id, entry);
+        long bytes;
+        try {
+            bytes = Files.size(tempFile);
+        } catch (IOException e) {
+            bytes = -1;
+        }
         try {
             executor.execute(() -> runJob(id, tempFile, filename, contentType));
         } catch (RejectedExecutionException e) {
@@ -66,24 +78,49 @@ public class TaskQueueService {
             }
             throw e;
         }
+        log.info(
+                "validate job accepted: jobId={} file={} sizeBytes={} contentType={} queueDepth={} activeThreads={}/{}",
+                id,
+                filename,
+                bytes,
+                contentType,
+                executor.getQueue().size(),
+                executor.getActiveCount(),
+                executor.getMaximumPoolSize());
         return id;
     }
 
     private void runJob(UUID id, Path tempFile, String filename, String contentType) {
+        MDC.put("jobId", id.toString());
+        long t0 = System.nanoTime();
         try {
+            long sizeBytes = Files.size(tempFile);
+            log.info("job worker started: file={} sizeBytes={}", filename, sizeBytes);
             try (InputStream in = Files.newInputStream(tempFile)) {
                 ValidationResult result = checkEngineService.validate(filename, contentType, in);
                 JobEntry entry = jobs.get(id);
                 if (entry != null) {
                     entry.complete(result);
                 }
+                long ms = (System.nanoTime() - t0) / 1_000_000L;
+                log.info(
+                        "job completed: status=completed totalMs={} errors={}",
+                        ms,
+                        result.getSummary() != null && result.getSummary().getTotalErrors() != null
+                                ? result.getSummary().getTotalErrors()
+                                : 0);
             }
         } catch (ValidationException e) {
+            long ms = (System.nanoTime() - t0) / 1_000_000L;
+            log.warn("job failed (validation): totalMs={} message={}", ms, e.getMessage());
             failJob(id, e.getMessage());
         } catch (Exception e) {
+            long ms = (System.nanoTime() - t0) / 1_000_000L;
+            log.warn("job failed (unexpected): totalMs={}", ms, e);
             String msg = e.getMessage();
             failJob(id, msg != null && !msg.isBlank() ? msg : "Ошибка обработки документа");
         } finally {
+            MDC.remove("jobId");
             try {
                 Files.deleteIfExists(tempFile);
             } catch (Exception ignored) {
