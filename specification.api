@@ -1,17 +1,19 @@
 openapi: 3.0.0
 info:
   title: API проверки ВКР
-  description: Сервис автоматической проверки структуры и форматирования документов .docx на соответствие требованиям ИТМО.
+  description: Сервис проверки структуры и форматирования документов Word (.docx, .doc) на соответствие требованиям к ВКР ИТМО.
   version: 1.0.0
 servers:
+  - url: http://localhost:8080/v1
+    description: Локальный сервер
   - url: https://api.vkr-check.itmo.ru/v1
-    description: Production server
+    description: Продакшен
 
 paths:
   /validate:
     post:
-      summary: Загрузить файл и получить результат проверки
-      description: Принимает файл .docx, выполняет его анализ и сразу возвращает детальный JSON-отчет с ошибками.
+      summary: Загрузка файла на проверку
+      description: Multipart-загрузка документа Word. Ответ 202 — идентификатор задания.
       operationId: validateDocument
       requestBody:
         required: true
@@ -23,31 +25,63 @@ paths:
                 file:
                   type: string
                   format: binary
-                  description: Файл документа в формате .docx.
+                  description: Файл документа Word (.docx или .doc).
               required:
                 - file
       responses:
-        '200':
-          description: Успешная проверка. Возвращает результат анализа.
+        '202':
+          description: Задание принято к обработке.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ValidationResult'
+                $ref: '#/components/schemas/ValidateJobCreatedResponse'
         '400':
-          description: Ошибка валидации (неверный формат файла, поврежденный документ).
+          description: Неверный формат файла, имя файла или MIME-тип.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
               example:
                 code: "INVALID_FILE_FORMAT"
-                message: "Поддерживаются только файлы .docx. Загруженный файл имеет расширение .pdf."
-        '422':
-          description: Файл прочитан, но найдены критические ошибки структуры (например, отсутствует обязательный раздел). Статус 'failed'.
+                message: "Недопустимый формат файла. Разрешены только .doc и .docx."
+        '503':
+          description: Очередь переполнена, сервер не может принять новое задание.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ValidationResult'
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: "QUEUE_FULL"
+                message: "Сервер перегружен. Повторите попытку позже."
+        '500':
+          description: Внутренняя ошибка сервера.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /validate/jobs/{jobId}:
+    get:
+      summary: Статус задания и результат проверки
+      description: Возвращает статус задания и при успешном завершении — объект результата проверки. Несуществующее или устаревшее задание — ответ 404.
+      operationId: getValidationJob
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          description: Идентификатор задания (UUID).
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Статус задания и при наличии — результат проверки.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidateJobStatusResponse'
+        '404':
+          description: Задание не найдено или срок хранения результата истёк.
         '500':
           description: Внутренняя ошибка сервера.
           content:
@@ -57,8 +91,8 @@ paths:
 
   /report:
     post:
-      summary: Сгенерировать PDF-отчет по результатам проверки
-      description: Принимает ранее полученный результат проверки (JSON) и возвращает готовый PDF-файл. Файл не сохраняется на сервере, отдается сразу.
+      summary: PDF-отчёт по результату проверки
+      description: По телу запроса с результатом проверки формирует PDF. Имя файла передаётся в заголовке Content-Disposition.
       operationId: generateReport
       requestBody:
         required: true
@@ -77,22 +111,29 @@ paths:
                     include_recommendations:
                       type: boolean
                       default: true
-                      description: Включить в отчет подробные рекомендации по исправлению ошибок.
+                      description: Включить в отчёт рекомендации по исправлению ошибок.
       responses:
         '200':
-          description: PDF-отчет успешно сгенерирован.
+          description: PDF-отчёт успешно сгенерирован.
+          headers:
+            Content-Disposition:
+              description: Вложение с именем файла (UTF-8).
+              schema:
+                type: string
           content:
             application/pdf:
               schema:
                 type: string
                 format: binary
-                description: Файл отчета в формате PDF.
         '400':
-          description: Некорректные входные данные для генерации отчета.
+          description: Некорректный запрос.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: "BAD_REQUEST"
+                message: "validation_data is required"
         '500':
           description: Ошибка при формировании PDF.
           content:
@@ -102,6 +143,32 @@ paths:
 
 components:
   schemas:
+    ValidateJobCreatedResponse:
+      type: object
+      required:
+        - job_id
+      properties:
+        job_id:
+          type: string
+          format: uuid
+          description: Идентификатор задания проверки.
+
+    ValidateJobStatusResponse:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          enum: [pending, completed, failed]
+          description: Состояние задания.
+        result:
+          $ref: '#/components/schemas/ValidationResult'
+          description: Результат проверки при успешном завершении.
+        message:
+          type: string
+          description: Сообщение при ошибке обработки.
+
     ValidationResult:
       type: object
       required:
@@ -133,13 +200,13 @@ components:
             status:
               type: string
               enum: [passed, warning, failed]
-              description: "passed - нет критических ошибок, warning - есть замечания, failed - есть критические ошибки."
+              description: "passed — нет критических ошибок; warning — есть замечания; failed — есть критические ошибки."
               example: "failed"
         errors:
           type: array
           items:
             $ref: '#/components/schemas/ErrorItem'
-    
+
     ErrorItem:
       type: object
       properties:
@@ -167,7 +234,7 @@ components:
         severity:
           type: string
           enum: [critical, warning]
-          description: "critical - требует обязательного исправления, warning - рекомендация."
+          description: "critical — требует обязательного исправления; warning — рекомендация."
         location:
           type: object
           properties:
