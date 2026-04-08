@@ -10,5 +10,5 @@ RUN sed -i 's/\r$//' gradlew && chmod +x gradlew && ./gradlew bootJar --no-daemo
 FROM amazoncorretto:21
 WORKDIR /app
 COPY --from=build /app/build/libs/backend-0.0.1-SNAPSHOT.jar /app/backend.jar
-EXPOSE 8080
+EXPOSE 7727
 CMD ["java", "-jar", "backend.jar"]

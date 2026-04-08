@@ -4,7 +4,7 @@ info:
   description: Сервис проверки структуры и форматирования документов Word (.docx, .doc) на соответствие требованиям к ВКР ИТМО.
   version: 1.0.0
 servers:
-  - url: http://localhost:8080/v1
+  - url: http://localhost:7727/v1
     description: Локальный сервер
   - url: https://api.vkr-check.itmo.ru/v1
     description: Продакшен

@@ -5,7 +5,7 @@ services:
       dockerfile: Dockerfile
     container_name: practise_backend
     ports:
-      - "8080:8080"
+      - "7727:7727"
 
   frontend:
     build:
@@ -13,7 +13,7 @@ services:
       dockerfile: Dockerfile
     container_name: practise_frontend
     ports:
-      - "4200:4200"
+      - "7272:7272"
     volumes:
       - ./frontend:/app
       - /app/node_modules

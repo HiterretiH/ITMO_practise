@@ -1,6 +1,6 @@
 {
   "/v1": {
-    "target": "http://backend:8080",
+    "target": "http://backend:7727",
     "secure": false,
     "changeOrigin": true
   }

@@ -3,5 +3,5 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci
 COPY . .
-EXPOSE 4200
-CMD ["npm", "run", "start", "--", "--host", "0.0.0.0", "--port", "4200", "--proxy-config", "src/proxy.conf.docker.json"]
+EXPOSE 7272
+CMD ["npm", "run", "start", "--", "--host", "0.0.0.0", "--proxy-config", "src/proxy.conf.docker.json"]
